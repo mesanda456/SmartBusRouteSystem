@@ -1,12 +1,13 @@
 package controller;
 
 
-import com.busroute.planner.model.BusStop;
-import com.busroute.planner.model.RouteRequest;
-import com.busroute.planner.model.RouteResponse;
-import com.busroute.planner.service.RouteService;
+
+import model.BusStop;
+import model.RouteRequest;
+import model.RouteResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import service.RouteService;
 
 import java.util.List;
 

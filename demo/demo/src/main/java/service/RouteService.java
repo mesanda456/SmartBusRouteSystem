@@ -1,11 +1,12 @@
 package service;
 
 
-
-import com.busroute.planner.algorithms.BFS;
-import com.busroute.planner.algorithms.Dijkstra;
-import com.busroute.planner.graph.Graph;
-import com.busroute.planner.model.*;
+import algorithms.BFS;
+import algorithms.Dijkstra;
+import graph.Graph;
+import model.BusStop;
+import model.RouteRequest;
+import model.RouteResponse;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;

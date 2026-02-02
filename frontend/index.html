@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚌 Advanced Bus Route Planner</title>
+    
+    <!-- Leaflet CSS for Maps (FREE - No API Key!) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
         * {
             margin: 0;
@@ -42,6 +46,40 @@
             font-size: 14px;
         }
 
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 15px;
+        }
+
+        .status-online {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-offline {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .main-layout {
             display: grid;
             grid-template-columns: 350px 1fr 400px;
@@ -57,6 +95,18 @@
             overflow-y: auto;
         }
 
+        .card h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        #map {
+            height: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
         .input-group {
             margin-bottom: 18px;
         }
@@ -69,18 +119,44 @@
             font-size: 14px;
         }
 
-        select, input {
+        select {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 15px;
             transition: border 0.3s;
+            background: white;
         }
 
-        select:focus, input:focus {
+        select:focus {
             outline: none;
             border-color: #667eea;
+        }
+
+        select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+        }
+
+        .checkbox-label {
+            font-size: 13px;
+            color: #856404;
+            margin: 0;
         }
 
         .button-group {
@@ -100,13 +176,18 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .btn-dijkstra {
@@ -125,19 +206,6 @@
             grid-column: span 2;
         }
 
-        #map {
-            width: 100%;
-            height: 100%;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .result-section h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-
         .algorithm-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -152,7 +220,7 @@
             color: white;
         }
 
-        .badge-bfs {
+        .badge-bfs, .badge-BFS {
             background: #f5576c;
             color: white;
         }
@@ -186,11 +254,17 @@
             font-weight: bold;
             margin-right: 12px;
             font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .stop-info {
+            flex: 1;
         }
 
         .stop-name {
             font-size: 14px;
             font-weight: 500;
+            color: #333;
         }
 
         .stop-id {
@@ -232,26 +306,6 @@
             text-transform: uppercase;
         }
 
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 12px;
-            padding: 10px;
-            background: #fff3cd;
-            border-radius: 8px;
-        }
-
-        input[type="checkbox"] {
-            width: auto;
-        }
-
-        .checkbox-label {
-            font-size: 13px;
-            color: #856404;
-            margin: 0;
-        }
-
         .no-result {
             text-align: center;
             padding: 40px 20px;
@@ -264,11 +318,18 @@
         }
 
         .legend {
-            background: white;
+            background: #f8f9fa;
             padding: 15px;
             border-radius: 10px;
             margin-top: 15px;
             font-size: 12px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
         }
 
         .legend-item {
@@ -282,11 +343,43 @@
             height: 12px;
             border-radius: 50%;
             margin-right: 8px;
+            flex-shrink: 0;
         }
 
         .dot-blue { background: #4285F4; }
         .dot-green { background: #34A853; }
         .dot-red { background: #EA4335; }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+            border-left: 4px solid #c62828;
+        }
 
         @media (max-width: 1200px) {
             .main-layout {
@@ -296,6 +389,15 @@
             
             #map {
                 height: 400px;
+                order: 2;
+            }
+
+            .card:first-child {
+                order: 1;
+            }
+
+            .card:last-child {
+                order: 3;
             }
         }
     </style>
@@ -304,25 +406,31 @@
     <div class="container">
         <header>
             <h1>🚌 Advanced Bus Route Planner</h1>
-            <p class="subtitle">Powered by Dijkstra's Algorithm & BFS with Google Maps Integration</p>
+            <p class="subtitle">
+                Powered by Dijkstra & BFS Algorithms with Spring Boot Backend
+                <span id="apiStatus" class="status-indicator status-offline">
+                    <span class="status-dot"></span>
+                    Connecting...
+                </span>
+            </p>
         </header>
 
         <div class="main-layout">
             <!-- LEFT PANEL: Input Controls -->
             <div class="card">
-                <h3 style="margin-bottom: 20px;">Plan Your Journey</h3>
+                <h3>Plan Your Journey</h3>
                 
                 <div class="input-group">
                     <label>📍 From (Source)</label>
-                    <select id="sourceSelect">
-                        <option value="">Select starting point</option>
+                    <select id="sourceSelect" disabled>
+                        <option value="">Loading stops...</option>
                     </select>
                 </div>
 
                 <div class="input-group">
                     <label>🎯 To (Destination)</label>
-                    <select id="destSelect">
-                        <option value="">Select destination</option>
+                    <select id="destSelect" disabled>
+                        <option value="">Loading stops...</option>
                     </select>
                 </div>
 
@@ -330,7 +438,7 @@
                     <label>⚡ Optimize For</label>
                     <select id="modeSelect">
                         <option value="distance">Shortest Distance (km)</option>
-                        <option value="time">Fastest Time (minutes)</option>
+                        <option value="time">Fastest Time (min)</option>
                         <option value="cost">Lowest Cost (Rs.)</option>
                     </select>
                 </div>
@@ -343,10 +451,10 @@
                 </div>
 
                 <div class="button-group">
-                    <button class="btn-dijkstra" onclick="findRoute('dijkstra')">
+                    <button class="btn-dijkstra" onclick="findRoute('dijkstra')" id="btnDijkstra" disabled>
                         🎯 Dijkstra
                     </button>
-                    <button class="btn-bfs" onclick="findRoute('bfs')">
+                    <button class="btn-bfs" onclick="findRoute('bfs')" id="btnBfs" disabled>
                         🔍 BFS
                     </button>
                     <button class="btn-clear" onclick="clearResults()">
@@ -355,7 +463,7 @@
                 </div>
 
                 <div class="legend">
-                    <strong>Map Legend:</strong>
+                    <div class="legend-title">Map Legend:</div>
                     <div class="legend-item">
                         <div class="legend-dot dot-blue"></div>
                         <span>All Bus Stops</span>
@@ -371,7 +479,7 @@
                 </div>
             </div>
 
-            <!-- CENTER: Google Map -->
+            <!-- CENTER: Map -->
             <div id="map"></div>
 
             <!-- RIGHT PANEL: Results -->
@@ -387,298 +495,119 @@
         </div>
     </div>
 
-    <!-- Google Maps API -->
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPqia0HFi6I4SRXYwngUKal85mNbhndT0&callback=initMap">
-</script>
+    <!-- Leaflet JS (FREE Maps) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <script>
+        // ==================== CONFIGURATION ====================
+        const API_BASE_URL = 'http://localhost:8080/api';
+        
         // ==================== GLOBAL VARIABLES ====================
         let map;
         let markers = [];
         let routeLine = null;
+        let busStops = [];
+        let apiOnline = false;
+
+        // ==================== INITIALIZE ON PAGE LOAD ====================
         
-        // ==================== DATA STRUCTURES ====================
+        window.onload = function() {
+            initializeMap();
+            checkAPIStatus();
+            loadBusStops();
+        };
+
+        // ==================== MAP INITIALIZATION ====================
         
-        class BusStop {
-            constructor(id, name, lat, lng) {
-                this.id = id;
-                this.name = name;
-                this.latitude = lat;
-                this.longitude = lng;
-            }
+        function initializeMap() {
+            // Initialize Leaflet map (centered on Colombo, Sri Lanka)
+            map = L.map('map').setView([6.9271, 79.8612], 12);
+            
+            // Add OpenStreetMap tiles (FREE!)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
         }
 
-        class Edge {
-            constructor(destination, distance, time, cost, safe) {
-                this.destination = destination;
-                this.distance = distance;
-                this.time = time;
-                this.cost = cost;
-                this.safe = safe;
-            }
-        }
-
-        class Graph {
-            constructor() {
-                this.adjList = new Map();
-            }
-
-            addStop(stop) {
-                if (!this.adjList.has(stop)) {
-                    this.adjList.set(stop, []);
+        // ==================== API FUNCTIONS ====================
+        
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    setAPIStatus(true);
+                } else {
+                    setAPIStatus(false);
                 }
-            }
-
-            addRoute(from, to, distance, time, cost, safe) {
-                this.adjList.get(from).push(new Edge(to, distance, time, cost, safe));
+            } catch (error) {
+                setAPIStatus(false);
+                console.error('API connection error:', error);
             }
         }
 
-        // ==================== INITIALIZE MAP ====================
-        
-        function initMap() {
-            // Center map on Colombo, Sri Lanka
-            map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 12,
-                center: { lat: 6.9271, lng: 79.8612 },
-                mapTypeControl: true,
-                streetViewControl: false,
-                fullscreenControl: true,
-                styles: [
-                    {
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{ visibility: "off" }]
-                    }
-                ]
-            });
-
-            // Initialize data
-            initializeData();
+        function setAPIStatus(online) {
+            apiOnline = online;
+            const statusEl = document.getElementById('apiStatus');
+            
+            if (online) {
+                statusEl.className = 'status-indicator status-online';
+                statusEl.innerHTML = '<span class="status-dot"></span>API Connected';
+            } else {
+                statusEl.className = 'status-indicator status-offline';
+                statusEl.innerHTML = '<span class="status-dot"></span>API Offline';
+                showError('Cannot connect to backend. Make sure Spring Boot is running on port 8080.');
+            }
         }
 
-        // ==================== INITIALIZE DATA ====================
-        
-        const graph = new Graph();
-        const busStops = [];
-
-        function initializeData() {
-            // Create bus stops (Colombo area coordinates)
-            const stops = [
-                new BusStop('A', 'Fort Railway Station', 6.9344, 79.8428),
-                new BusStop('B', 'Pettah Market', 6.9387, 79.8550),
-                new BusStop('C', 'Kollupitiya Junction', 6.9147, 79.8501),
-                new BusStop('D', 'Bambalapitiya', 6.8934, 79.8553),
-                new BusStop('E', 'Dehiwala Zoo', 6.8569, 79.8742),
-                new BusStop('F', 'Mount Lavinia', 6.8389, 79.8630)
-            ];
-
-            // Add stops to graph and populate dropdowns
-            stops.forEach(stop => {
-                busStops.push(stop);
-                graph.addStop(stop);
+        async function loadBusStops() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stops`);
                 
-                const option = `<option value="${stop.id}">${stop.id} - ${stop.name}</option>`;
-                document.getElementById('sourceSelect').innerHTML += option;
-                document.getElementById('destSelect').innerHTML += option;
-            });
-
-            // Add routes (bidirectional)
-            addBidirectionalRoute(stops[0], stops[1], 3, 15, 50, true);   // A <-> B
-            addBidirectionalRoute(stops[0], stops[2], 2, 10, 40, true);   // A <-> C
-            addBidirectionalRoute(stops[1], stops[3], 4, 20, 60, false);  // B <-> D (unsafe)
-            addBidirectionalRoute(stops[2], stops[3], 1, 8, 30, true);    // C <-> D
-            addBidirectionalRoute(stops[3], stops[4], 3, 18, 55, true);   // D <-> E
-            addBidirectionalRoute(stops[3], stops[5], 5, 25, 70, true);   // D <-> F
-
-            // Display all bus stops on map
-            displayAllStops();
-        }
-
-        function addBidirectionalRoute(stop1, stop2, distance, time, cost, safe) {
-            graph.addRoute(stop1, stop2, distance, time, cost, safe);
-            graph.addRoute(stop2, stop1, distance, time, cost, safe);
-        }
-
-        // ==================== MAP FUNCTIONS ====================
-        
-        function displayAllStops() {
-            clearMarkers();
-            
-            busStops.forEach(stop => {
-                const marker = new google.maps.Marker({
-                    position: { lat: stop.latitude, lng: stop.longitude },
-                    map: map,
-                    title: `${stop.id} - ${stop.name}`,
-                    icon: {
-                        url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-                    }
-                });
-
-                const infoWindow = new google.maps.InfoWindow({
-                    content: `<strong>${stop.id}</strong><br>${stop.name}`
-                });
-
-                marker.addListener('click', () => {
-                    infoWindow.open(map, marker);
-                });
-
-                markers.push(marker);
-            });
-        }
-
-        function displayRoute(path) {
-            clearMarkers();
-            clearRouteLine();
-
-            // Display all stops
-            displayAllStops();
-
-            // Highlight route stops in green
-            const routeCoordinates = [];
-            
-            path.forEach((stop, index) => {
-                const position = { lat: stop.latitude, lng: stop.longitude };
-                routeCoordinates.push(position);
-
-                const marker = new google.maps.Marker({
-                    position: position,
-                    map: map,
-                    title: `Stop ${index + 1}: ${stop.name}`,
-                    icon: {
-                        url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
-                    },
-                    label: {
-                        text: String(index + 1),
-                        color: 'white',
-                        fontWeight: 'bold'
-                    }
-                });
-
-                markers.push(marker);
-            });
-
-            // Draw route line
-            routeLine = new google.maps.Polyline({
-                path: routeCoordinates,
-                geodesic: true,
-                strokeColor: '#EA4335',
-                strokeOpacity: 1.0,
-                strokeWeight: 4
-            });
-
-            routeLine.setMap(map);
-
-            // Fit map to show entire route
-            const bounds = new google.maps.LatLngBounds();
-            routeCoordinates.forEach(coord => bounds.extend(coord));
-            map.fitBounds(bounds);
-        }
-
-        function clearMarkers() {
-            markers.forEach(marker => marker.setMap(null));
-            markers = [];
-        }
-
-        function clearRouteLine() {
-            if (routeLine) {
-                routeLine.setMap(null);
-                routeLine = null;
-            }
-        }
-
-        // ==================== DIJKSTRA ALGORITHM ====================
-        
-        function dijkstra(source, mode, emergencyOnly) {
-            const dist = new Map();
-            const prev = new Map();
-            const unvisited = new Set();
-
-            graph.adjList.forEach((edges, stop) => {
-                dist.set(stop, Infinity);
-                prev.set(stop, null);
-                unvisited.add(stop);
-            });
-
-            dist.set(source, 0);
-
-            while (unvisited.size > 0) {
-                let current = null;
-                let minDist = Infinity;
-
-                unvisited.forEach(stop => {
-                    if (dist.get(stop) < minDist) {
-                        minDist = dist.get(stop);
-                        current = stop;
-                    }
-                });
-
-                if (current === null || minDist === Infinity) break;
-                unvisited.delete(current);
-
-                const edges = graph.adjList.get(current);
-                edges.forEach(edge => {
-                    if (emergencyOnly && !edge.safe) return;
-
-                    const weight = mode === 'time' ? edge.time : 
-                                 mode === 'cost' ? edge.cost : edge.distance;
-                    
-                    const alt = dist.get(current) + weight;
-
-                    if (alt < dist.get(edge.destination)) {
-                        dist.set(edge.destination, alt);
-                        prev.set(edge.destination, current);
-                    }
-                });
-            }
-
-            return { dist, prev };
-        }
-
-        // ==================== BFS ALGORITHM ====================
-        
-        function bfs(start, end) {
-            const queue = [start];
-            const visited = new Map();
-            const prev = new Map();
-
-            visited.set(start, 0);
-            prev.set(start, null);
-
-            while (queue.length > 0) {
-                const current = queue.shift();
-
-                if (current === end) {
-                    const path = [];
-                    let node = end;
-                    while (node) {
-                        path.unshift(node);
-                        node = prev.get(node);
-                    }
-                    return { found: true, path, stops: visited.get(end) };
+                if (!response.ok) {
+                    throw new Error('Failed to load bus stops');
                 }
-
-                const edges = graph.adjList.get(current);
-                edges.forEach(edge => {
-                    if (!visited.has(edge.destination)) {
-                        visited.set(edge.destination, visited.get(current) + 1);
-                        prev.set(edge.destination, current);
-                        queue.push(edge.destination);
-                    }
+                
+                busStops = await response.json();
+                
+                // Populate dropdowns
+                const sourceSelect = document.getElementById('sourceSelect');
+                const destSelect = document.getElementById('destSelect');
+                
+                sourceSelect.innerHTML = '<option value="">Select starting point</option>';
+                destSelect.innerHTML = '<option value="">Select destination</option>';
+                
+                busStops.forEach(stop => {
+                    const option = `<option value="${stop.id}">${stop.id} - ${stop.name}</option>`;
+                    sourceSelect.innerHTML += option;
+                    destSelect.innerHTML += option;
                 });
+                
+                // Enable controls
+                sourceSelect.disabled = false;
+                destSelect.disabled = false;
+                document.getElementById('btnDijkstra').disabled = false;
+                document.getElementById('btnBfs').disabled = false;
+                
+                // Display stops on map
+                displayAllStopsOnMap();
+                
+                console.log(`✅ Loaded ${busStops.length} bus stops from API`);
+                
+            } catch (error) {
+                console.error('Error loading bus stops:', error);
+                showError('Failed to load bus stops. Check if backend is running.');
+                setAPIStatus(false);
             }
-
-            return { found: false, path: [], stops: -1 };
         }
 
-        // ==================== ROUTE FINDING ====================
-        
-        function findRoute(algorithm) {
+        async function findRoute(algorithm) {
             const sourceId = document.getElementById('sourceSelect').value;
             const destId = document.getElementById('destSelect').value;
             const mode = document.getElementById('modeSelect').value;
-            const emergency = document.getElementById('emergencyMode').checked;
+            const emergencyOnly = document.getElementById('emergencyMode').checked;
 
+            // Validation
             if (!sourceId || !destId) {
                 alert('⚠️ Please select both source and destination!');
                 return;
@@ -689,57 +618,126 @@
                 return;
             }
 
-            const source = busStops.find(s => s.id === sourceId);
-            const dest = busStops.find(s => s.id === destId);
+            // Show loading
+            showLoading();
 
-            let result;
-
-            if (algorithm === 'dijkstra') {
-                const { dist, prev } = dijkstra(source, mode, emergency);
-                
-                if (dist.get(dest) === Infinity) {
-                    displayNoRoute();
-                    displayAllStops();
-                    return;
-                }
-
-                const path = [];
-                let current = dest;
-                while (current) {
-                    path.unshift(current);
-                    current = prev.get(current);
-                }
-
-                result = {
-                    found: true,
-                    path: path,
-                    total: dist.get(dest),
-                    algorithm: 'Dijkstra',
-                    mode: mode
+            try {
+                const requestBody = {
+                    source: sourceId,
+                    destination: destId,
+                    algorithm: algorithm,
+                    mode: mode,
+                    emergencyOnly: emergencyOnly
                 };
-            } else {
-                const bfsResult = bfs(source, dest);
-                
-                if (!bfsResult.found) {
-                    displayNoRoute();
-                    displayAllStops();
-                    return;
+
+                const response = await fetch(`${API_BASE_URL}/route`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Route calculation failed');
                 }
 
-                result = {
-                    found: true,
-                    path: bfsResult.path,
-                    total: bfsResult.stops,
-                    algorithm: 'BFS',
-                    mode: 'stops'
-                };
+                const result = await response.json();
+                
+                if (result.found) {
+                    displayResult(result);
+                    displayRouteOnMap(result.path);
+                } else {
+                    displayNoRoute(result.message || 'No route found');
+                    displayAllStopsOnMap();
+                }
+
+            } catch (error) {
+                console.error('Error finding route:', error);
+                showError('Failed to calculate route. Check backend connection.');
+                setAPIStatus(false);
             }
-
-            displayResult(result);
-            displayRoute(result.path);
         }
 
-        // ==================== DISPLAY RESULTS ====================
+        // ==================== MAP DISPLAY FUNCTIONS ====================
+        
+        function displayAllStopsOnMap() {
+            clearMap();
+            
+            if (busStops.length === 0) return;
+            
+            const bounds = [];
+            
+            busStops.forEach(stop => {
+                const latLng = [stop.latitude, stop.longitude];
+                bounds.push(latLng);
+                
+                const marker = L.marker(latLng, {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map);
+                
+                marker.bindPopup(`<b>${stop.id}</b><br>${stop.name}`);
+                markers.push(marker);
+            });
+            
+            // Fit map to show all stops
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+
+        function displayRouteOnMap(path) {
+            clearMap();
+            
+            const routeCoords = [];
+            
+            path.forEach((stop, index) => {
+                const latLng = [stop.latitude, stop.longitude];
+                routeCoords.push(latLng);
+                
+                // Green markers for route
+                const marker = L.marker(latLng, {
+                    icon: L.divIcon({
+                        html: `<div style="background: #34A853; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">${index + 1}</div>`,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                    })
+                }).addTo(map);
+                
+                marker.bindPopup(`<b>Stop ${index + 1}</b><br>${stop.name}`);
+                markers.push(marker);
+            });
+            
+            // Draw route line
+            if (routeCoords.length > 1) {
+                routeLine = L.polyline(routeCoords, {
+                    color: '#EA4335',
+                    weight: 4,
+                    opacity: 0.8
+                }).addTo(map);
+                
+                map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+            }
+        }
+
+        function clearMap() {
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
+        }
+
+        // ==================== UI DISPLAY FUNCTIONS ====================
         
         function displayResult(result) {
             const container = document.getElementById('resultContainer');
@@ -751,19 +749,12 @@
                 'stops': 'transfers'
             };
 
-            const modeNames = {
-                'distance': 'Distance',
-                'time': 'Time',
-                'cost': 'Cost',
-                'stops': 'Transfers'
-            };
-
             let pathHTML = '';
             result.path.forEach((stop, index) => {
                 pathHTML += `
                     <div class="stop-item">
                         <div class="stop-number">${index + 1}</div>
-                        <div>
+                        <div class="stop-info">
                             <div class="stop-name">${stop.name}</div>
                             <div class="stop-id">Stop ${stop.id}</div>
                         </div>
@@ -777,7 +768,7 @@
             container.innerHTML = `
                 <h3>
                     Route Found!
-                    <span class="algorithm-badge badge-${result.algorithm.toLowerCase()}">
+                    <span class="algorithm-badge badge-${result.algorithm}">
                         ${result.algorithm}
                     </span>
                 </h3>
@@ -788,33 +779,56 @@
 
                 <div class="stats-grid">
                     <div class="stat-box">
-                        <div class="stat-value">${result.total}</div>
-                        <div class="stat-label">${modeLabels[result.mode]}</div>
+                        <div class="stat-value">${result.totalValue}</div>
+                        <div class="stat-label">${modeLabels[result.mode] || result.mode}</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-value">${result.path.length}</div>
-                        <div class="stat-label">Stops</div>
+                        <div class="stat-value">${result.totalStops}</div>
+                        <div class="stat-label">Total Stops</div>
                     </div>
                 </div>
             `;
         }
 
-        function displayNoRoute() {
+        function displayNoRoute(message) {
             document.getElementById('resultContainer').innerHTML = `
                 <div class="no-result">
                     <div class="no-result-icon">❌</div>
                     <h3>No Route Found</h3>
-                    <p style="font-size: 13px;">No available path between these locations</p>
+                    <p style="font-size: 13px;">${message}</p>
                 </div>
             `;
+        }
+
+        function showLoading() {
+            document.getElementById('resultContainer').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Calculating optimal route...</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `<strong>⚠️ Error:</strong> ${message}`;
+            
+            const container = document.querySelector('.card');
+            const existing = container.querySelector('.error-message');
+            if (existing) existing.remove();
+            
+            container.appendChild(errorDiv);
+            
+            setTimeout(() => errorDiv.remove(), 5000);
         }
 
         function clearResults() {
             document.getElementById('sourceSelect').value = '';
             document.getElementById('destSelect').value = '';
             document.getElementById('emergencyMode').checked = false;
-            clearRouteLine();
-            displayAllStops();
+            
+            displayAllStopsOnMap();
             
             document.getElementById('resultContainer').innerHTML = `
                 <div class="no-result">

@@ -2,8 +2,10 @@ package graph;
 
 
 
-import com.busroute.planner.model.BusStop;
-import com.busroute.planner.model.Edge;
+
+import model.BusStop;
+import model.Edge;
+
 import java.util.*;
 
 /**
