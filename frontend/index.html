@@ -504,13 +504,13 @@
 
         // ==================== GLOBAL VARIABLES ====================
         let map;
-        let markers = [];
-        let routeLine = null;
-        let busStops = [];
+        let stopMarkers = [];     // 🚌 permanent bus stops
+        let routeMarkers = [];    // 📍 route-only markers
+        let routeLine = null;     // straight line
+        let roadPolylines = [];   // road-following polylines
         let apiOnline = false;
 
         // ==================== INITIALIZE ON PAGE LOAD ====================
-
         window.onload = function() {
             initializeMap();
             checkAPIStatus();
@@ -518,12 +518,9 @@
         };
 
         // ==================== MAP INITIALIZATION ====================
-
         function initializeMap() {
-            // Initialize Leaflet map (centered on Colombo, Sri Lanka)
             map = L.map('map').setView([6.9271, 79.8612], 12);
 
-            // Add OpenStreetMap tiles (FREE!)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
@@ -531,18 +528,12 @@
         }
 
         // ==================== API FUNCTIONS ====================
-
         async function checkAPIStatus() {
             try {
                 const response = await fetch(`${API_BASE_URL}/health`);
-                if (response.ok) {
-                    setAPIStatus(true);
-                } else {
-                    setAPIStatus(false);
-                }
-            } catch (error) {
+                setAPIStatus(response.ok);
+            } catch {
                 setAPIStatus(false);
-                console.error('API connection error:', error);
             }
         }
 
@@ -556,49 +547,31 @@
             } else {
                 statusEl.className = 'status-indicator status-offline';
                 statusEl.innerHTML = '<span class="status-dot"></span>API Offline';
-                showError('Cannot connect to backend. Make sure Spring Boot is running on port 8080.');
             }
         }
 
         async function loadBusStops() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/stops`);
+            const response = await fetch(`${API_BASE_URL}/stops`);
+            busStops = await response.json();
 
-                if (!response.ok) {
-                    throw new Error('Failed to load bus stops');
-                }
+            const sourceSelect = document.getElementById('sourceSelect');
+            const destSelect = document.getElementById('destSelect');
 
-                busStops = await response.json();
+            sourceSelect.innerHTML = '<option value="">Select starting point</option>';
+            destSelect.innerHTML = '<option value="">Select destination</option>';
 
-                // Populate dropdowns
-                const sourceSelect = document.getElementById('sourceSelect');
-                const destSelect = document.getElementById('destSelect');
+            busStops.forEach(stop => {
+                const option = `<option value="${stop.id}">${stop.id} - ${stop.name}</option>`;
+                sourceSelect.innerHTML += option;
+                destSelect.innerHTML += option;
+            });
 
-                sourceSelect.innerHTML = '<option value="">Select starting point</option>';
-                destSelect.innerHTML = '<option value="">Select destination</option>';
+            sourceSelect.disabled = false;
+            destSelect.disabled = false;
+            document.getElementById('btnDijkstra').disabled = false;
+            document.getElementById('btnBfs').disabled = false;
 
-                busStops.forEach(stop => {
-                    const option = `<option value="${stop.id}">${stop.id} - ${stop.name}</option>`;
-                    sourceSelect.innerHTML += option;
-                    destSelect.innerHTML += option;
-                });
-
-                // Enable controls
-                sourceSelect.disabled = false;
-                destSelect.disabled = false;
-                document.getElementById('btnDijkstra').disabled = false;
-                document.getElementById('btnBfs').disabled = false;
-
-                // Display stops on map
-                displayAllStopsOnMap();
-
-                console.log(`✅ Loaded ${busStops.length} bus stops from API`);
-
-            } catch (error) {
-                console.error('Error loading bus stops:', error);
-                showError('Failed to load bus stops. Check if backend is running.');
-                setAPIStatus(false);
-            }
+            displayAllStopsOnMap();
         }
 
         async function findRoute(algorithm) {
@@ -607,237 +580,241 @@
             const mode = document.getElementById('modeSelect').value;
             const emergencyOnly = document.getElementById('emergencyMode').checked;
 
-            // Validation
-            if (!sourceId || !destId) {
-                alert('⚠️ Please select both source and destination!');
-                return;
-            }
+            if (!sourceId || !destId || sourceId === destId) return;
 
-            if (sourceId === destId) {
-                alert('⚠️ Source and destination cannot be the same!');
-                return;
-            }
-
-            // Show loading
             showLoading();
 
-            try {
-                const requestBody = {
+            const response = await fetch(`${API_BASE_URL}/route`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     source: sourceId,
                     destination: destId,
-                    algorithm: algorithm,
-                    mode: mode,
-                    emergencyOnly: emergencyOnly
-                };
+                    algorithm,
+                    mode,
+                    emergencyOnly
+                })
+            });
 
-                const response = await fetch(`${API_BASE_URL}/route`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
+            const result = await response.json();
 
-                if (!response.ok) {
-                    throw new Error('Route calculation failed');
-                }
-
-                const result = await response.json();
-
-                if (result.found) {
-                    displayResult(result);
-                    displayRouteOnMap(result.path);
-                } else {
-                    displayNoRoute(result.message || 'No route found');
-                    displayAllStopsOnMap();
-                }
-
-            } catch (error) {
-                console.error('Error finding route:', error);
-                showError('Failed to calculate route. Check backend connection.');
-                setAPIStatus(false);
+            if (result.found) {
+                displayResult(result);
+                displayRouteOnMap(result.path);     // ✅ OLD (kept)
+                drawRoadFollowingRoute(result);     // ✅ NEW (added)
+            } else {
+                displayNoRoute(result.message);
+                displayAllStopsOnMap();
             }
         }
 
-        // ==================== MAP DISPLAY FUNCTIONS ====================
-
+        // ==================== MAP DISPLAY ====================
         function displayAllStopsOnMap() {
-            clearMap();
 
-            if (busStops.length === 0) return;
+    // remove old stop markers if any (only first load safety)
+    stopMarkers.forEach(m => map.removeLayer(m));
+    stopMarkers = [];
 
-            const bounds = [];
+    const bounds = [];
 
-            busStops.forEach(stop => {
-                const latLng = [stop.latitude, stop.longitude];
-                bounds.push(latLng);
+    busStops.forEach(stop => {
+        const latLng = [stop.latitude, stop.longitude];
+        bounds.push(latLng);
 
-                const marker = L.marker(latLng, {
-                    icon: L.icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    })
-                }).addTo(map);
+        const marker = L.marker(latLng).addTo(map);
+        marker.bindPopup(`<b>${stop.id}</b><br>${stop.name}`);
 
-                marker.bindPopup(`<b>${stop.id}</b><br>${stop.name}`);
-                markers.push(marker);
-            });
+        stopMarkers.push(marker); // ✅ permanent
+    });
 
-            // Fit map to show all stops
-            if (bounds.length > 0) {
-                map.fitBounds(bounds, { padding: [50, 50] });
-            }
-        }
+    map.fitBounds(bounds, { padding: [50, 50] });
+}
 
-        function displayRouteOnMap(path) {
-            clearMap();
 
-            const routeCoords = [];
+       function displayRouteOnMap(path) {
 
-            path.forEach((stop, index) => {
-                const latLng = [stop.latitude, stop.longitude];
-                routeCoords.push(latLng);
+    // remove previous route markers
+    routeMarkers.forEach(m => map.removeLayer(m));
+    routeMarkers = [];
 
-                // Green markers for route
-                const marker = L.marker(latLng, {
-                    icon: L.divIcon({
-                        html: `<div style="background: #34A853; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">${index + 1}</div>`,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 15]
-                    })
-                }).addTo(map);
+    const routeCoords = [];
 
-                marker.bindPopup(`<b>Stop ${index + 1}</b><br>${stop.name}`);
-                markers.push(marker);
-            });
+    path.forEach((stop, i) => {
+        const latLng = [stop.latitude, stop.longitude];
+        routeCoords.push(latLng);
 
-            // Draw route line
-            if (routeCoords.length > 1) {
-                routeLine = L.polyline(routeCoords, {
-                    color: '#EA4335',
-                    weight: 4,
-                    opacity: 0.8
-                }).addTo(map);
+        const marker = L.marker(latLng).addTo(map);
+        marker.bindPopup(`${i + 1}. ${stop.name}`);
 
-                map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
-            }
-        }
+        routeMarkers.push(marker); // ❌ temporary
+    });
+
+    if (routeLine) map.removeLayer(routeLine);
+
+    routeLine = L.polyline(routeCoords, {
+        color: '#EA4335',
+        weight: 3
+    }).addTo(map);
+
+    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+}
+
+
+        // ==================== 🔥 NEW: ROAD-FOLLOWING ROUTE ====================
+        function drawRoadFollowingRoute(result) {
+
+    if (!result.polylines || result.polylines.length === 0) return;
+
+    // remove old straight line
+    if (routeLine) {
+        map.removeLayer(routeLine);
+        routeLine = null;
+    }
+
+    // remove old road routes
+    roadPolylines.forEach(p => map.removeLayer(p));
+    roadPolylines = [];
+
+    const bounds = [];
+
+    result.polylines.forEach(segment => {
+        const poly = L.polyline(segment, {
+            color: '#EA4335',
+            weight: 5,
+            opacity: 0.9
+        }).addTo(map);
+
+        roadPolylines.push(poly); // ✅ track it
+
+        segment.forEach(p => bounds.push(p));
+    });
+
+    map.fitBounds(bounds, { padding: [50, 50] });
+}
+
 
         function clearMap() {
-            markers.forEach(marker => map.removeLayer(marker));
+            markers.forEach(m => map.removeLayer(m));
             markers = [];
-
-            if (routeLine) {
-                map.removeLayer(routeLine);
-                routeLine = null;
-            }
+            if (routeLine) map.removeLayer(routeLine);
+            routeLine = null;
         }
 
-        // ==================== UI DISPLAY FUNCTIONS ====================
+            // ==================== UI DISPLAY FUNCTIONS ====================
 
-        function displayResult(result) {
-            const container = document.getElementById('resultContainer');
+            function displayResult(result) {
+                const container = document.getElementById('resultContainer');
 
-            const modeLabels = {
-                'distance': 'km',
-                'time': 'min',
-                'cost': 'Rs.',
-                'stops': 'transfers'
-            };
+                const modeLabels = {
+                    'distance': 'km',
+                    'time': 'min',
+                    'cost': 'Rs.',
+                    'stops': 'transfers'
+                };
 
-            let pathHTML = '';
-            result.path.forEach((stop, index) => {
-                pathHTML += `
-                    <div class="stop-item">
-                        <div class="stop-number">${index + 1}</div>
-                        <div class="stop-info">
-                            <div class="stop-name">${stop.name}</div>
-                            <div class="stop-id">Stop ${stop.id}</div>
+                let pathHTML = '';
+                result.path.forEach((stop, index) => {
+                    pathHTML += `
+                        <div class="stop-item">
+                            <div class="stop-number">${index + 1}</div>
+                            <div class="stop-info">
+                                <div class="stop-name">${stop.name}</div>
+                                <div class="stop-id">Stop ${stop.id}</div>
+                            </div>
+                        </div>
+                    `;
+                    if (index < result.path.length - 1) {
+                        pathHTML += '<div class="arrow">↓</div>';
+                    }
+                });
+
+                container.innerHTML = `
+                    <h3>
+                        Route Found!
+                        <span class="algorithm-badge badge-${result.algorithm}">
+                            ${result.algorithm}
+                        </span>
+                    </h3>
+
+                    <div class="path-list">
+                        ${pathHTML}
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value">${result.totalValue}</div>
+                            <div class="stat-label">${modeLabels[result.mode] || result.mode}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${result.totalStops}</div>
+                            <div class="stat-label">Total Stops</div>
                         </div>
                     </div>
                 `;
-                if (index < result.path.length - 1) {
-                    pathHTML += '<div class="arrow">↓</div>';
-                }
-            });
+            }
 
-            container.innerHTML = `
-                <h3>
-                    Route Found!
-                    <span class="algorithm-badge badge-${result.algorithm}">
-                        ${result.algorithm}
-                    </span>
-                </h3>
-
-                <div class="path-list">
-                    ${pathHTML}
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-value">${result.totalValue}</div>
-                        <div class="stat-label">${modeLabels[result.mode] || result.mode}</div>
+            function displayNoRoute(message) {
+                document.getElementById('resultContainer').innerHTML = `
+                    <div class="no-result">
+                        <div class="no-result-icon">❌</div>
+                        <h3>No Route Found</h3>
+                        <p style="font-size: 13px;">${message}</p>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-value">${result.totalStops}</div>
-                        <div class="stat-label">Total Stops</div>
+                `;
+            }
+
+            function showLoading() {
+                document.getElementById('resultContainer').innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Calculating optimal route...</p>
                     </div>
-                </div>
-            `;
-        }
+                `;
+            }
 
-        function displayNoRoute(message) {
-            document.getElementById('resultContainer').innerHTML = `
-                <div class="no-result">
-                    <div class="no-result-icon">❌</div>
-                    <h3>No Route Found</h3>
-                    <p style="font-size: 13px;">${message}</p>
-                </div>
-            `;
-        }
+            function showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerHTML = `<strong>⚠️ Error:</strong> ${message}`;
 
-        function showLoading() {
-            document.getElementById('resultContainer').innerHTML = `
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <p>Calculating optimal route...</p>
-                </div>
-            `;
-        }
+                const container = document.querySelector('.card');
+                const existing = container.querySelector('.error-message');
+                if (existing) existing.remove();
 
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.innerHTML = `<strong>⚠️ Error:</strong> ${message}`;
+                container.appendChild(errorDiv);
 
-            const container = document.querySelector('.card');
-            const existing = container.querySelector('.error-message');
-            if (existing) existing.remove();
+                setTimeout(() => errorDiv.remove(), 5000);
+            }
 
-            container.appendChild(errorDiv);
+  function clearResults() {
 
-            setTimeout(() => errorDiv.remove(), 5000);
-        }
+    // remove straight route line
+    if (routeLine) {
+        map.removeLayer(routeLine);
+        routeLine = null;
+    }
 
-        function clearResults() {
-            document.getElementById('sourceSelect').value = '';
-            document.getElementById('destSelect').value = '';
-            document.getElementById('emergencyMode').checked = false;
+    // remove road-following polylines
+    roadPolylines.forEach(p => map.removeLayer(p));
+    roadPolylines = [];
 
-            displayAllStopsOnMap();
+    // remove ONLY route markers
+    routeMarkers.forEach(m => map.removeLayer(m));
+    routeMarkers = [];
 
-            document.getElementById('resultContainer').innerHTML = `
-                <div class="no-result">
-                    <div class="no-result-icon">🗺️</div>
-                    <h3>No Route Selected</h3>
-                    <p style="font-size: 13px;">Choose source and destination to find the best route</p>
-                </div>
-            `;
-        }
+    // 🚫 DO NOT TOUCH stopMarkers (bus stops stay)
+
+    document.getElementById('resultContainer').innerHTML = `
+        <div class="no-result">
+            <div class="no-result-icon">🗺️</div>
+            <h3>No Route Selected</h3>
+            <p style="font-size: 13px;">Choose source and destination to find the best route</p>
+        </div>
+    `;
+}
+
+
+
     </script>
 </body>
 </html>
