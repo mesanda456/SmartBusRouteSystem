@@ -98,13 +98,27 @@ public class AlternativeRoutes {
         }
 
         if (path.isEmpty() || !path.get(0).equals(source)) {
-            return new RouteResponse(false, new ArrayList<>(), 0,
-                    "Weighted", "balanced");
+            return new RouteResponse(
+                    false,
+                    new ArrayList<>(),
+                    null,
+                    0,
+                    "Weighted",
+                    "balanced"
+            );
+
         }
 
         int totalCost = dist.get(destination).intValue();
-        RouteResponse result = new RouteResponse(true, path, totalCost,
-                "Weighted Multi-Objective", "balanced");
+        RouteResponse result = new RouteResponse(
+                true,
+                path,
+                null, // polylines added later
+                totalCost,
+                "Weighted Multi-Objective",
+                "balanced"
+        );
+
         result.setMessage(String.format(
                 "Balanced route (%.0f%% distance, %.0f%% time, %.0f%% cost)",
                 distanceWeight * 100, timeWeight * 100, costWeight * 100

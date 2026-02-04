@@ -3,8 +3,11 @@ package com.example.bus_router_planner.model;
 import java.util.List;
 
 public class RouteResponse {
+
     private boolean found;
-    private List<BusStop> path;
+    private List<BusStop> path;                 // logical bus stop path
+    private List<List<double[]>> polylines;     // real road geometry
+
     private int totalValue;
     private int totalStops;
     private String algorithm;
@@ -13,16 +16,25 @@ public class RouteResponse {
 
     public RouteResponse() {}
 
-    public RouteResponse(boolean found, List<BusStop> path, int totalValue,
-                         String algorithm, String mode) {
+    public RouteResponse(
+            boolean found,
+            List<BusStop> path,
+            List<List<double[]>> polylines,
+            int totalValue,
+            String algorithm,
+            String mode
+    ) {
         this.found = found;
         this.path = path;
+        this.polylines = polylines;
         this.totalValue = totalValue;
         this.totalStops = path != null ? path.size() : 0;
         this.algorithm = algorithm;
         this.mode = mode;
         this.message = found ? "Route found successfully" : "No route available";
     }
+
+    // ---------- getters & setters ----------
 
     public boolean isFound() {
         return found;
@@ -41,6 +53,24 @@ public class RouteResponse {
         this.totalStops = path != null ? path.size() : 0;
     }
 
+    // 🔹 Original name (map rendering)
+    public List<List<double[]>> getPolylines() {
+        return polylines;
+    }
+
+    public void setPolylines(List<List<double[]>> polylines) {
+        this.polylines = polylines;
+    }
+
+    // 🔹 ALIAS for algorithms (fixes your errors)
+    public List<List<double[]>> getRoutes() {
+        return polylines;
+    }
+
+    public void setRoutes(List<List<double[]>> routes) {
+        this.polylines = routes;
+    }
+
     public int getTotalValue() {
         return totalValue;
     }
@@ -51,10 +81,6 @@ public class RouteResponse {
 
     public int getTotalStops() {
         return totalStops;
-    }
-
-    public void setTotalStops(int totalStops) {
-        this.totalStops = totalStops;
     }
 
     public String getAlgorithm() {

@@ -58,7 +58,8 @@ public class AStar {
             }
         }
 
-        return new RouteResponse(false, new ArrayList<>(), 0, "A*", mode);
+        // ❌ FIXED: Added missing routes parameter
+        return new RouteResponse(false, new ArrayList<>(), new ArrayList<>(), 0, "A*", mode);
     }
 
     private static double heuristic(BusStop from, BusStop to) {
@@ -102,10 +103,31 @@ public class AStar {
         }
 
         if (path.isEmpty() || !path.get(0).equals(source)) {
-            return new RouteResponse(false, new ArrayList<>(), 0, "A*", mode);
+            // ❌ FIXED: Added missing routes parameter
+            return new RouteResponse(false, new ArrayList<>(), new ArrayList<>(), 0, "A*", mode);
         }
 
+        // ❌ FIXED: Added routes parameter and better route coordinate generation
+        List<List<double[]>> routes = generateRouteCoordinates(path);
         int totalCost = gScore.get(dest).intValue();
-        return new RouteResponse(true, path, totalCost, "A*", mode);
+        return new RouteResponse(true, path, routes, totalCost, "A*", mode);
+    }
+
+    // ✅ NEW: Helper method to generate route coordinates from path
+    private static List<List<double[]>> generateRouteCoordinates(List<BusStop> path) {
+        List<List<double[]>> routes = new ArrayList<>();
+
+        if (path.size() < 2) {
+            return routes; // Return empty if path is too short
+        }
+
+        List<double[]> routeCoordinates = new ArrayList<>();
+        for (BusStop stop : path) {
+            double[] coords = {stop.getLatitude(), stop.getLongitude()};
+            routeCoordinates.add(coords);
+        }
+
+        routes.add(routeCoordinates);
+        return routes;
     }
 }

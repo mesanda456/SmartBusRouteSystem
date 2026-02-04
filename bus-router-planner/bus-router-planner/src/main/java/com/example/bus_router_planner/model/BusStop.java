@@ -3,13 +3,16 @@ package com.example.bus_router_planner.model;
 import java.util.Objects;
 
 public class BusStop {
+
     private String id;
     private String name;
     private double latitude;
     private double longitude;
 
+    // Required for JSON / Spring
     public BusStop() {}
 
+    // MAIN constructor (use this everywhere)
     public BusStop(String id, String name, double latitude, double longitude) {
         this.id = id;
         this.name = name;
@@ -17,13 +20,7 @@ public class BusStop {
         this.longitude = longitude;
     }
 
-    public BusStop(String name) {
-        this.id = name;
-        this.name = name;
-        this.latitude = 0.0;
-        this.longitude = 0.0;
-    }
-
+    // Getters & setters
     public String getId() {
         return id;
     }
@@ -61,10 +58,11 @@ public class BusStop {
         return name;
     }
 
+    // IMPORTANT: equality based on ID only
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof BusStop)) return false;
         BusStop busStop = (BusStop) o;
         return Objects.equals(id, busStop.id);
     }

@@ -16,8 +16,12 @@ public class Dijkstra {
         }
     }
 
-    public static Result findPath(Graph graph, BusStop source,
-                                  String mode, boolean emergencyOnly) {
+    public static Result findPath(
+            Graph graph,
+            BusStop source,
+            String mode,
+            boolean emergencyOnly
+    ) {
 
         Map<BusStop, Integer> dist = new HashMap<>();
         Map<BusStop, BusStop> prev = new HashMap<>();
@@ -38,8 +42,7 @@ public class Dijkstra {
 
             for (Edge edge : graph.adjList.get(current)) {
 
-                if (emergencyOnly && !edge.isSafe())
-                    continue;
+                if (emergencyOnly && !edge.isSafe()) continue;
 
                 int weight = switch (mode) {
                     case "time" -> edge.getTime();
@@ -61,14 +64,25 @@ public class Dijkstra {
         return new Result(dist, prev);
     }
 
-    public static RouteResponse getRoute(Graph graph, BusStop source,
-                                         BusStop destination, String mode,
-                                         boolean emergencyOnly) {
+    public static RouteResponse getRoute(
+            Graph graph,
+            BusStop source,
+            BusStop destination,
+            String mode,
+            boolean emergencyOnly
+    ) {
 
         Result result = findPath(graph, source, mode, emergencyOnly);
 
         if (result.distance.get(destination) == Integer.MAX_VALUE) {
-            return new RouteResponse(false, new ArrayList<>(), 0, "Dijkstra", mode);
+            return new RouteResponse(
+                    false,
+                    new ArrayList<>(),
+                    null,              // polylines handled later
+                    0,
+                    "Dijkstra",
+                    mode
+            );
         }
 
         List<BusStop> path = new ArrayList<>();
@@ -81,6 +95,13 @@ public class Dijkstra {
 
         int totalCost = result.distance.get(destination);
 
-        return new RouteResponse(true, path, totalCost, "Dijkstra", mode);
+        return new RouteResponse(
+                true,
+                path,
+                null,              // polylines handled in RouteService
+                totalCost,
+                "Dijkstra",
+                mode
+        );
     }
 }

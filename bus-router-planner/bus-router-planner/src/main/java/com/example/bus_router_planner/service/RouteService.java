@@ -4,7 +4,9 @@ import com.example.bus_router_planner.algorithms.*;
 import com.example.bus_router_planner.graph.Graph;
 import com.example.bus_router_planner.model.*;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.annotation.PostConstruct;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +16,12 @@ public class RouteService {
     private Graph graph;
     private List<BusStop> allStops;
 
+    @Autowired
+    private RoadSegmentService roadSegmentService;
+
     @PostConstruct
     public void initializeGraph() {
+
         graph = new Graph();
         allStops = new ArrayList<>();
 
@@ -75,31 +81,48 @@ public class RouteService {
             return response;
         }
 
-        String algorithm = request.getAlgorithm() != null ?
-                request.getAlgorithm().toLowerCase() : "dijkstra";
+        String algorithm = request.getAlgorithm() != null
+                ? request.getAlgorithm().toLowerCase()
+                : "dijkstra";
+
+        RouteResponse response;
 
         switch (algorithm) {
+
             case "bfs":
-                return BFS.getRoute(graph, source, destination);
+                response = BFS.getRoute(graph, source, destination);
+                break;
 
             case "astar":
                 String mode = request.getMode() != null ? request.getMode() : "distance";
-                return AStar.getRoute(graph, source, destination, mode);
+                response = AStar.getRoute(graph, source, destination, mode);
+                break;
 
             case "balanced":
-                return AlternativeRoutes.getBalancedRoute(
+                response = AlternativeRoutes.getBalancedRoute(
                         graph, source, destination, 0.33, 0.33, 0.34
                 );
+                break;
 
             case "dijkstra":
             default:
-                String dijkstraMode = request.getMode() != null ? request.getMode() : "distance";
+                String dijkstraMode = request.getMode() != null
+                        ? request.getMode()
+                        : "distance";
                 boolean emergency = request.isEmergencyOnly();
-                return Dijkstra.getRoute(graph, source, destination, dijkstraMode, emergency);
+                response = Dijkstra.getRoute(
+                        graph, source, destination, dijkstraMode, emergency
+                );
         }
+
+        // ✅ Attach Google-Maps-style road polylines
+        attachPolylines(response);
+
+        return response;
     }
 
     public List<RouteResponse> getAlternativeRoutes(String sourceId, String destinationId) {
+
         BusStop source = graph.findStopById(sourceId);
         BusStop destination = graph.findStopById(destinationId);
 
@@ -107,6 +130,39 @@ public class RouteService {
             return new ArrayList<>();
         }
 
-        return AlternativeRoutes.findAlternatives(graph, source, destination);
+        List<RouteResponse> routes =
+                AlternativeRoutes.findAlternatives(graph, source, destination);
+
+        for (RouteResponse route : routes) {
+            attachPolylines(route);
+        }
+
+        return routes;
+    }
+
+    // ===================== HELPER METHOD =====================
+
+    private void attachPolylines(RouteResponse response) {
+
+        if (!response.isFound() || response.getPath() == null) return;
+
+        List<List<double[]>> polylines = new ArrayList<>();
+        List<BusStop> path = response.getPath();
+
+        for (int i = 0; i < path.size() - 1; i++) {
+
+            List<double[]> segment =
+                    roadSegmentService.getSegment(
+                            path.get(i),
+                            path.get(i + 1)
+                    );
+
+            // never null, safe to add
+            if (!segment.isEmpty()) {
+                polylines.add(segment);
+            }
+        }
+
+        response.setPolylines(polylines);
     }
 }

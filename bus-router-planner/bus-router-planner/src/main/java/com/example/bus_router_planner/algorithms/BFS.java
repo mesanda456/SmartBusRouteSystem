@@ -54,7 +54,21 @@ public class BFS {
                 }
 
                 int totalStops = stops.get(end);
-                return new RouteResponse(true, path, totalStops, "BFS", "stops");
+
+                // 🔹 BFS has no real road geometry
+                List<List<double[]>> polylines = new ArrayList<>();
+
+                RouteResponse result = new RouteResponse(
+                        true,
+                        path,
+                        polylines,
+                        totalStops,
+                        "BFS",
+                        "stops"
+                );
+
+                result.setMessage("Minimum stops route found");
+                return result;
             }
 
             for (Edge edge : graph.adjList.get(current)) {
@@ -66,6 +80,17 @@ public class BFS {
             }
         }
 
-        return new RouteResponse(false, new ArrayList<>(), -1, "BFS", "stops");
+        // ❌ No route found
+        RouteResponse failed = new RouteResponse(
+                false,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                -1,
+                "BFS",
+                "stops"
+        );
+
+        failed.setMessage("No route available");
+        return failed;
     }
 }

@@ -4,18 +4,21 @@ import com.example.bus_router_planner.model.BusStop;
 import com.example.bus_router_planner.model.RouteRequest;
 import com.example.bus_router_planner.model.RouteResponse;
 import com.example.bus_router_planner.service.RouteService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // OK for development
 public class RouteController {
 
-    @Autowired
-    private RouteService routeService;
+    private final RouteService routeService;
+
+    // ✅ Constructor injection (recommended)
+    public RouteController(RouteService routeService) {
+        this.routeService = routeService;
+    }
 
     @GetMapping("/health")
     public String health() {
@@ -27,11 +30,13 @@ public class RouteController {
         return routeService.getAllBusStops();
     }
 
+    // 🔵 Preferred for frontend (complex payload)
     @PostMapping("/route")
     public RouteResponse findRoute(@RequestBody RouteRequest request) {
         return routeService.findRoute(request);
     }
 
+    // 🟡 Convenience endpoint (simple testing)
     @GetMapping("/route")
     public RouteResponse findRouteSimple(
             @RequestParam String source,
@@ -40,8 +45,14 @@ public class RouteController {
             @RequestParam(defaultValue = "distance") String mode,
             @RequestParam(defaultValue = "false") boolean emergencyOnly) {
 
-        RouteRequest request = new RouteRequest(source, destination,
-                algorithm, mode, emergencyOnly);
+        RouteRequest request = new RouteRequest(
+                source,
+                destination,
+                algorithm,
+                mode,
+                emergencyOnly
+        );
+
         return routeService.findRoute(request);
     }
 

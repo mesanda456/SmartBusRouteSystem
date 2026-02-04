@@ -497,11 +497,11 @@
 
     <!-- Leaflet JS (FREE Maps) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+
     <script>
         // ==================== CONFIGURATION ====================
         const API_BASE_URL = 'http://localhost:8080/api';
-        
+
         // ==================== GLOBAL VARIABLES ====================
         let map;
         let markers = [];
@@ -510,7 +510,7 @@
         let apiOnline = false;
 
         // ==================== INITIALIZE ON PAGE LOAD ====================
-        
+
         window.onload = function() {
             initializeMap();
             checkAPIStatus();
@@ -518,11 +518,11 @@
         };
 
         // ==================== MAP INITIALIZATION ====================
-        
+
         function initializeMap() {
             // Initialize Leaflet map (centered on Colombo, Sri Lanka)
             map = L.map('map').setView([6.9271, 79.8612], 12);
-            
+
             // Add OpenStreetMap tiles (FREE!)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
@@ -531,7 +531,7 @@
         }
 
         // ==================== API FUNCTIONS ====================
-        
+
         async function checkAPIStatus() {
             try {
                 const response = await fetch(`${API_BASE_URL}/health`);
@@ -549,7 +549,7 @@
         function setAPIStatus(online) {
             apiOnline = online;
             const statusEl = document.getElementById('apiStatus');
-            
+
             if (online) {
                 statusEl.className = 'status-indicator status-online';
                 statusEl.innerHTML = '<span class="status-dot"></span>API Connected';
@@ -563,37 +563,37 @@
         async function loadBusStops() {
             try {
                 const response = await fetch(`${API_BASE_URL}/stops`);
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to load bus stops');
                 }
-                
+
                 busStops = await response.json();
-                
+
                 // Populate dropdowns
                 const sourceSelect = document.getElementById('sourceSelect');
                 const destSelect = document.getElementById('destSelect');
-                
+
                 sourceSelect.innerHTML = '<option value="">Select starting point</option>';
                 destSelect.innerHTML = '<option value="">Select destination</option>';
-                
+
                 busStops.forEach(stop => {
                     const option = `<option value="${stop.id}">${stop.id} - ${stop.name}</option>`;
                     sourceSelect.innerHTML += option;
                     destSelect.innerHTML += option;
                 });
-                
+
                 // Enable controls
                 sourceSelect.disabled = false;
                 destSelect.disabled = false;
                 document.getElementById('btnDijkstra').disabled = false;
                 document.getElementById('btnBfs').disabled = false;
-                
+
                 // Display stops on map
                 displayAllStopsOnMap();
-                
+
                 console.log(`✅ Loaded ${busStops.length} bus stops from API`);
-                
+
             } catch (error) {
                 console.error('Error loading bus stops:', error);
                 showError('Failed to load bus stops. Check if backend is running.');
@@ -643,7 +643,7 @@
                 }
 
                 const result = await response.json();
-                
+
                 if (result.found) {
                     displayResult(result);
                     displayRouteOnMap(result.path);
@@ -660,18 +660,18 @@
         }
 
         // ==================== MAP DISPLAY FUNCTIONS ====================
-        
+
         function displayAllStopsOnMap() {
             clearMap();
-            
+
             if (busStops.length === 0) return;
-            
+
             const bounds = [];
-            
+
             busStops.forEach(stop => {
                 const latLng = [stop.latitude, stop.longitude];
                 bounds.push(latLng);
-                
+
                 const marker = L.marker(latLng, {
                     icon: L.icon({
                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
@@ -682,11 +682,11 @@
                         shadowSize: [41, 41]
                     })
                 }).addTo(map);
-                
+
                 marker.bindPopup(`<b>${stop.id}</b><br>${stop.name}`);
                 markers.push(marker);
             });
-            
+
             // Fit map to show all stops
             if (bounds.length > 0) {
                 map.fitBounds(bounds, { padding: [50, 50] });
@@ -695,13 +695,13 @@
 
         function displayRouteOnMap(path) {
             clearMap();
-            
+
             const routeCoords = [];
-            
+
             path.forEach((stop, index) => {
                 const latLng = [stop.latitude, stop.longitude];
                 routeCoords.push(latLng);
-                
+
                 // Green markers for route
                 const marker = L.marker(latLng, {
                     icon: L.divIcon({
@@ -710,11 +710,11 @@
                         iconAnchor: [15, 15]
                     })
                 }).addTo(map);
-                
+
                 marker.bindPopup(`<b>Stop ${index + 1}</b><br>${stop.name}`);
                 markers.push(marker);
             });
-            
+
             // Draw route line
             if (routeCoords.length > 1) {
                 routeLine = L.polyline(routeCoords, {
@@ -722,7 +722,7 @@
                     weight: 4,
                     opacity: 0.8
                 }).addTo(map);
-                
+
                 map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
             }
         }
@@ -730,7 +730,7 @@
         function clearMap() {
             markers.forEach(marker => map.removeLayer(marker));
             markers = [];
-            
+
             if (routeLine) {
                 map.removeLayer(routeLine);
                 routeLine = null;
@@ -738,10 +738,10 @@
         }
 
         // ==================== UI DISPLAY FUNCTIONS ====================
-        
+
         function displayResult(result) {
             const container = document.getElementById('resultContainer');
-            
+
             const modeLabels = {
                 'distance': 'km',
                 'time': 'min',
@@ -772,7 +772,7 @@
                         ${result.algorithm}
                     </span>
                 </h3>
-                
+
                 <div class="path-list">
                     ${pathHTML}
                 </div>
@@ -813,13 +813,13 @@
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.innerHTML = `<strong>⚠️ Error:</strong> ${message}`;
-            
+
             const container = document.querySelector('.card');
             const existing = container.querySelector('.error-message');
             if (existing) existing.remove();
-            
+
             container.appendChild(errorDiv);
-            
+
             setTimeout(() => errorDiv.remove(), 5000);
         }
 
@@ -827,9 +827,9 @@
             document.getElementById('sourceSelect').value = '';
             document.getElementById('destSelect').value = '';
             document.getElementById('emergencyMode').checked = false;
-            
+
             displayAllStopsOnMap();
-            
+
             document.getElementById('resultContainer').innerHTML = `
                 <div class="no-result">
                     <div class="no-result-icon">🗺️</div>
