@@ -3,818 +3,626 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚌 Advanced Bus Route Planner</title>
-    
-    <!-- Leaflet CSS for Maps (FREE - No API Key!) -->
+    <title>🚌 Smart Bus Route Finder - Sri Lanka</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:#0f172a; min-height:100vh; overflow:hidden; }
+        .app-layout { display:grid; grid-template-columns:420px 1fr; height:100vh; }
+        .sidebar { background:#1e293b; display:flex; flex-direction:column; border-right:1px solid #334155; overflow:hidden; }
+        .sidebar-header { padding:20px 24px 16px; border-bottom:1px solid #334155; }
+        .logo { display:flex; align-items:center; gap:12px; margin-bottom:4px; }
+        .logo-icon { width:42px; height:42px; background:linear-gradient(135deg,#3b82f6,#06b6d4); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+        .logo h1 { color:#f1f5f9; font-size:18px; font-weight:700; }
+        .logo-sub { color:#64748b; font-size:12px; font-family:'Space Mono',monospace; }
+        .status-bar { display:flex; align-items:center; gap:8px; margin-top:12px; padding:8px 12px; background:#0f172a; border-radius:8px; }
+        .status-dot { width:8px; height:8px; border-radius:50%; animation:pulse 2s infinite; }
+        .status-dot.online { background:#22c55e; } .status-dot.offline { background:#ef4444; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .status-text { font-size:12px; font-family:'Space Mono',monospace; }
+        .status-text.online { color:#22c55e; } .status-text.offline { color:#ef4444; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+        .search-section { padding:20px 24px; border-bottom:1px solid #334155; }
+        .search-box { position:relative; margin-bottom:14px; }
+        .search-box label { display:block; color:#94a3b8; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+        .search-input-wrap { position:relative; }
+        .search-input-wrap .icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:16px; z-index:2; }
+        .search-input { width:100%; padding:13px 14px 13px 42px; background:#0f172a; border:2px solid #334155; border-radius:10px; color:#f1f5f9; font-size:15px; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+        .search-input:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
+        .search-input::placeholder { color:#475569; }
+        .autocomplete-list { position:absolute; top:100%; left:0; right:0; background:#1e293b; border:1px solid #334155; border-radius:0 0 10px 10px; max-height:200px; overflow-y:auto; z-index:100; display:none; }
+        .autocomplete-list.show { display:block; }
+        .autocomplete-item { padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:10px; transition:background 0.15s; border-bottom:1px solid #0f172a; }
+        .autocomplete-item:hover { background:#334155; }
+        .autocomplete-item .stop-badge { width:32px; height:32px; background:#3b82f6; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:white; flex-shrink:0; font-family:'Space Mono',monospace; }
+        .autocomplete-item .stop-name { color:#f1f5f9; font-size:14px; font-weight:500; }
+        .autocomplete-item .stop-coords { color:#64748b; font-size:11px; font-family:'Space Mono',monospace; }
+        .my-location-btn { display:flex; align-items:center; gap:6px; background:none; border:1px dashed #475569; border-radius:8px; color:#3b82f6; font-size:12px; font-weight:600; padding:8px 12px; cursor:pointer; transition:all 0.2s; margin-top:6px; }
+        .my-location-btn:hover { border-color:#3b82f6; background:rgba(59,130,246,0.08); }
+        .swap-btn { display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; border:2px solid #334155; background:#1e293b; color:#94a3b8; font-size:16px; cursor:pointer; margin:-6px auto; position:relative; z-index:5; transition:all 0.2s; }
+        .swap-btn:hover { border-color:#3b82f6; color:#3b82f6; transform:rotate(180deg); }
+        .options-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+        .option-select { width:100%; padding:10px 12px; background:#0f172a; border:2px solid #334155; border-radius:8px; color:#f1f5f9; font-size:13px; font-family:'DM Sans',sans-serif; cursor:pointer; }
+        .option-select:focus { outline:none; border-color:#3b82f6; }
+        .action-buttons { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+        .btn { padding:13px 16px; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; font-family:'DM Sans',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; }
+        .btn:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+        .btn:disabled { opacity:0.5; cursor:not-allowed; }
+        .btn-primary { background:linear-gradient(135deg,#3b82f6,#2563eb); color:white; }
+        .btn-secondary { background:linear-gradient(135deg,#8b5cf6,#7c3aed); color:white; }
+        .btn-clear { background:#334155; color:#94a3b8; grid-column:span 2; }
+        .results-section { flex:1; overflow-y:auto; padding:20px 24px; }
+        .results-section::-webkit-scrollbar { width:6px; }
+        .results-section::-webkit-scrollbar-thumb { background:#334155; border-radius:3px; }
+        .empty-state { text-align:center; padding:40px 20px; }
+        .empty-state .icon { font-size:48px; margin-bottom:12px; }
+        .empty-state h3 { color:#94a3b8; font-size:16px; margin-bottom:6px; }
+        .empty-state p { color:#475569; font-size:13px; }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+        .route-card { background:#0f172a; border:1px solid #334155; border-radius:14px; overflow:hidden; margin-bottom:16px; }
+        .route-card-header { padding:16px 18px; background:linear-gradient(135deg,#1e3a5f,#1e293b); display:flex; align-items:center; justify-content:space-between; }
+        .route-card-header h3 { color:#22c55e; font-size:16px; display:flex; align-items:center; gap:8px; }
+        .algo-badge { padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; font-family:'Space Mono',monospace; text-transform:uppercase; }
+        .algo-badge.dijkstra { background:#3b82f6; color:white; }
+        .algo-badge.bfs { background:#8b5cf6; color:white; }
+        .route-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:#334155; }
+        .stat-cell { background:#1e293b; padding:14px 12px; text-align:center; }
+        .stat-cell .value { font-size:22px; font-weight:700; color:#f1f5f9; font-family:'Space Mono',monospace; }
+        .stat-cell .label { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+        .route-path { padding:16px 18px; }
+        .path-stop { display:flex; align-items:center; gap:12px; padding:10px 0; }
+        .path-stop-num { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; font-family:'Space Mono',monospace; }
+        .path-stop-num.start { background:#22c55e; color:#0f172a; }
+        .path-stop-num.end { background:#ef4444; color:white; }
+        .path-stop-num.mid { background:#334155; color:#94a3b8; border:2px solid #475569; }
+        .path-stop-info .name { color:#f1f5f9; font-size:14px; font-weight:500; }
+        .path-stop-info .id { color:#64748b; font-size:11px; font-family:'Space Mono',monospace; }
+        .path-connector { display:flex; align-items:center; padding-left:13px; height:28px; }
+        .path-connector .line { width:4px; height:100%; background:#334155; border-radius:2px; }
+        .path-connector .bus-label { margin-left:16px; padding:2px 10px; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); border-radius:12px; font-size:11px; color:#60a5fa; font-weight:600; font-family:'Space Mono',monospace; }
+        .loading-state { text-align:center; padding:40px; }
+        .spinner { width:40px; height:40px; border:3px solid #334155; border-top-color:#3b82f6; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .loading-state p { color:#94a3b8; font-size:14px; }
+        .error-state { text-align:center; padding:30px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:12px; }
+        .error-state .icon { font-size:36px; margin-bottom:10px; }
+        .error-state h3 { color:#ef4444; font-size:15px; margin-bottom:4px; }
+        .error-state p { color:#94a3b8; font-size:13px; }
 
-        header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-        }
+        .map-container { position:relative; }
+        #map { width:100%; height:100vh; }
+        .map-overlay { position:absolute; top:16px; right:16px; z-index:1000; background:rgba(15,23,42,0.92); backdrop-filter:blur(12px); border:1px solid #334155; border-radius:12px; padding:14px 18px; color:#f1f5f9; font-size:12px; max-width:220px; }
+        .map-overlay .title { font-weight:700; margin-bottom:8px; color:#3b82f6; font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:1px; }
+        .map-overlay .legend-item { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+        .map-overlay .dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .dot-blue { background:#3b82f6; } .dot-green { background:#22c55e; } .dot-red { background:#ef4444; }
+        .dot-orange { background:#f97316; } .dot-purple { background:#a855f7; }
+        .map-overlay .legend-text { color:#94a3b8; }
 
-        h1 {
-            color: #667eea;
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 15px;
-        }
-
-        .status-online {
-            background: #4CAF50;
-            color: white;
-        }
-
-        .status-offline {
-            background: #f44336;
-            color: white;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: white;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .main-layout {
-            display: grid;
-            grid-template-columns: 350px 1fr 400px;
-            gap: 20px;
-            height: calc(100vh - 180px);
-        }
-
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow-y: auto;
-        }
-
-        .card h3 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-
-        #map {
-            height: 100%;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .input-group {
-            margin-bottom: 18px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 15px;
-            transition: border 0.3s;
-            background: white;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        select:disabled {
-            background: #f5f5f5;
-            cursor: not-allowed;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 12px;
-            padding: 10px;
-            background: #fff3cd;
-            border-radius: 8px;
-        }
-
-        input[type="checkbox"] {
-            width: auto;
-        }
-
-        .checkbox-label {
-            font-size: 13px;
-            color: #856404;
-            margin: 0;
-        }
-
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        button {
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-dijkstra {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-bfs {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            color: white;
-        }
-
-        .btn-clear {
-            background: #f0f0f0;
-            color: #333;
-            grid-column: span 2;
-        }
-
-        .algorithm-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .badge-dijkstra {
-            background: #667eea;
-            color: white;
-        }
-
-        .badge-bfs, .badge-BFS {
-            background: #f5576c;
-            color: white;
-        }
-
-        .path-list {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-        }
-
-        .stop-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            background: white;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .stop-number {
-            width: 28px;
-            height: 28px;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 12px;
-            font-size: 13px;
-            flex-shrink: 0;
-        }
-
-        .stop-info {
-            flex: 1;
-        }
-
-        .stop-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .stop-id {
-            font-size: 11px;
-            color: #666;
-        }
-
-        .arrow {
-            text-align: center;
-            color: #667eea;
-            font-size: 16px;
-            margin: 3px 0;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .stat-box {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            opacity: 0.9;
-            text-transform: uppercase;
-        }
-
-        .no-result {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-
-        .no-result-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-
-        .legend {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            font-size: 12px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .legend-title {
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-            flex-shrink: 0;
-        }
-
-        .dot-blue { background: #4285F4; }
-        .dot-green { background: #34A853; }
-        .dot-red { background: #EA4335; }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-
-        .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-size: 13px;
-            border-left: 4px solid #c62828;
-        }
-
-        @media (max-width: 1200px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
-            
-            #map {
-                height: 400px;
-                order: 2;
-            }
-
-            .card:first-child {
-                order: 1;
-            }
-
-            .card:last-child {
-                order: 3;
-            }
+        @media (max-width:900px) {
+            .app-layout { grid-template-columns:1fr; }
+            .sidebar { max-height:55vh; overflow-y:auto; }
+            #map { height:45vh; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🚌 Advanced Bus Route Planner</h1>
-            <p class="subtitle">
-                Powered by Dijkstra & BFS Algorithms with Spring Boot Backend
-                <span id="apiStatus" class="status-indicator status-offline">
-                    <span class="status-dot"></span>
-                    Connecting...
-                </span>
-            </p>
-        </header>
-
-        <div class="main-layout">
-            <!-- LEFT PANEL: Input Controls -->
-            <div class="card">
-                <h3>Plan Your Journey</h3>
-                
-                <div class="input-group">
-                    <label>📍 From (Source)</label>
-                    <select id="sourceSelect" disabled>
-                        <option value="">Loading stops...</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>🎯 To (Destination)</label>
-                    <select id="destSelect" disabled>
-                        <option value="">Loading stops...</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>⚡ Optimize For</label>
-                    <select id="modeSelect">
-                        <option value="distance">Shortest Distance (km)</option>
-                        <option value="time">Fastest Time (min)</option>
-                        <option value="cost">Lowest Cost (Rs.)</option>
-                    </select>
-                </div>
-
-                <div class="checkbox-group">
-                    <input type="checkbox" id="emergencyMode">
-                    <label for="emergencyMode" class="checkbox-label">
-                        🚨 Emergency Mode (Safe routes only)
-                    </label>
-                </div>
-
-                <div class="button-group">
-                    <button class="btn-dijkstra" onclick="findRoute('dijkstra')" id="btnDijkstra" disabled>
-                        🎯 Dijkstra
-                    </button>
-                    <button class="btn-bfs" onclick="findRoute('bfs')" id="btnBfs" disabled>
-                        🔍 BFS
-                    </button>
-                    <button class="btn-clear" onclick="clearResults()">
-                        🗑️ Clear
-                    </button>
-                </div>
-
-                <div class="legend">
-                    <div class="legend-title">Map Legend:</div>
-                    <div class="legend-item">
-                        <div class="legend-dot dot-blue"></div>
-                        <span>All Bus Stops</span>
+    <div class="app-layout">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">🚌</div>
+                    <div>
+                        <h1>Smart Bus Route</h1>
+                        <div class="logo-sub">Sri Lanka Transit Planner</div>
                     </div>
-                    <div class="legend-item">
-                        <div class="legend-dot dot-green"></div>
-                        <span>Your Route Stops</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot dot-red"></div>
-                        <span>Route Path</span>
-                    </div>
+                </div>
+                <div class="status-bar">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span class="status-text" id="statusText">Connecting...</span>
                 </div>
             </div>
 
-            <!-- CENTER: Map -->
-            <div id="map"></div>
+            <div class="search-section">
+                <div class="search-box">
+                    <label>From</label>
+                    <div class="search-input-wrap">
+                        <span class="icon">📍</span>
+                        <input type="text" class="search-input" id="sourceInput" placeholder="Type your location..." autocomplete="off">
+                        <div class="autocomplete-list" id="sourceList"></div>
+                    </div>
+                    <button class="my-location-btn" onclick="useMyLocation('source')">📡 Use my current location</button>
+                </div>
 
-            <!-- RIGHT PANEL: Results -->
-            <div class="card result-section">
-                <div id="resultContainer">
-                    <div class="no-result">
-                        <div class="no-result-icon">🗺️</div>
-                        <h3>No Route Selected</h3>
-                        <p style="font-size: 13px;">Choose source and destination to find the best route</p>
+                <button class="swap-btn" onclick="swapLocations()" title="Swap">⇅</button>
+
+                <div class="search-box">
+                    <label>To</label>
+                    <div class="search-input-wrap">
+                        <span class="icon">🎯</span>
+                        <input type="text" class="search-input" id="destInput" placeholder="Where do you want to go?" autocomplete="off">
+                        <div class="autocomplete-list" id="destList"></div>
                     </div>
                 </div>
+
+                <div class="options-row">
+                    <select class="option-select" id="modeSelect">
+                        <option value="distance">📏 Distance</option>
+                        <option value="time">⏱️ Time</option>
+                        <option value="cost">💰 Cost</option>
+                    </select>
+                    <select class="option-select" id="algoSelect">
+                        <option value="dijkstra">🎯 Dijkstra</option>
+                        <option value="bfs">🔍 BFS</option>
+                    </select>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="btnSearch" onclick="searchRoute()">🔎 Find Route</button>
+                    <button class="btn btn-secondary" id="btnAlternatives" onclick="searchAlternatives()">🔄 Alternatives</button>
+                    <button class="btn btn-clear" onclick="clearAll()">🗑️ Clear All</button>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsContainer">
+                <div class="empty-state">
+                    <div class="icon">🗺️</div>
+                    <h3>Search for a bus route</h3>
+                    <p>Example: Nugegoda → Colombo Fort</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="map-overlay">
+                <div class="title">Map Legend</div>
+                <div class="legend-item"><div class="dot dot-blue"></div><span class="legend-text">Bus Stop</span></div>
+                <div class="legend-item"><div class="dot dot-green"></div><span class="legend-text">Start Point</span></div>
+                <div class="legend-item"><div class="dot dot-red"></div><span class="legend-text">End Point</span></div>
+                <div class="legend-item"><div class="dot dot-orange"></div><span class="legend-text">Route Path</span></div>
+                <div class="legend-item"><div class="dot dot-purple"></div><span class="legend-text">My Location</span></div>
             </div>
         </div>
     </div>
 
-    <!-- Leaflet JS (FREE Maps) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script>
-        // ==================== CONFIGURATION ====================
-        const API_BASE_URL = 'http://localhost:8080/api';
+    // ==================== CONFIG ====================
+    const API_BASE_URL = 'http://localhost:8080/api';
 
-        // ==================== GLOBAL VARIABLES ====================
-        let map;
-        let stopMarkers = [];     // 🚌 permanent bus stops
-        let routeMarkers = [];    // 📍 route-only markers
-        let routeLine = null;     // straight line
-        let roadPolylines = [];   // road-following polylines
-        let apiOnline = false;
+    // ==================== STATE ====================
+    let map, busStops = [], stopMarkers = [], routeMarkers = [], routeLine = null, roadPolylines = [];
+    let myLocationMarker = null, selectedSource = null, selectedDest = null;
 
-        // ==================== INITIALIZE ON PAGE LOAD ====================
-        window.onload = function() {
-            initializeMap();
-            checkAPIStatus();
-            loadBusStops();
-        };
+    // Bus route numbers for corridors
+    const BUS_ROUTES = {
+        'FORT_PET':['1','100','138','176','255'], 'FORT_KOL':['100','101','154','400'],
+        'KOL_BAM':['100','101','154','400'], 'BAM_WEL':['100','101','154','400'],
+        'WEL_DEH':['100','101','154','400'], 'DEH_MLV':['100','101','400'],
+        'MLV_RAT':['100','101','400'], 'RAT_MOR':['100','400','350'],
+        'MOR_PAN':['400','350','2'], 'PET_MAR':['1','138','177','224'],
+        'MAR_BOR':['138','177','224','255'], 'BOR_TWN':['138','103'],
+        'TWN_KOL':['103','154'], 'TWN_NAR':['103','174'],
+        'BAM_NAR':['174','168'], 'BOR_NUG':['138','224','255','149'],
+        'NAR_NUG':['138','174','224'], 'NUG_WIJ':['255','224'],
+        'WIJ_DEH':['255','251'], 'NUG_MAH':['138','224','255','149'],
+        'MAH_KOT':['138','255','2/2'], 'KOT_HOM':['138','2/2'],
+        'BOR_RAJ':['177','103','188'], 'PET_RAJ':['177','188'],
+        'RAJ_BAT':['177','188','1'], 'BAT_MAL':['177','1'],
+        'MAL_KAD':['1','177'], 'BAT_NUG':['149','174'],
+        'PET_KEL':['235','245','246'], 'KEL_KIR':['235','245'],
+        'KEL_KDW':['246','243'], 'KDW_KIR':['243','245'],
+        'MAH_PIL':['350','370'], 'PIL_HOR':['350','370'],
+        'RAT_PIL':['350','370'], 'NUG_RAJ':['149','174'],
+        'MAH_MAL':['255','149'], 'KAD_KDW':['243','1']
+    };
 
-        // ==================== MAP INITIALIZATION ====================
-        function initializeMap() {
-            map = L.map('map').setView([6.9271, 79.8612], 12);
+    function getBusRoutes(fromId, toId) {
+        return BUS_ROUTES[fromId+'_'+toId] || BUS_ROUTES[toId+'_'+fromId] || ['Local'];
+    }
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(map);
-        }
+    // ==================== INIT ====================
+    window.onload = function() {
+        initMap();
+        checkAPI();
+        loadStops();
+        setupAutocomplete('sourceInput', 'sourceList', 'source');
+        setupAutocomplete('destInput', 'destList', 'dest');
+    };
 
-        // ==================== API FUNCTIONS ====================
-        async function checkAPIStatus() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/health`);
-                setAPIStatus(response.ok);
-            } catch {
-                setAPIStatus(false);
-            }
-        }
+    function initMap() {
+        map = L.map('map', { zoomControl: true }).setView([6.9271, 79.8612], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OSM © CARTO',
+            maxZoom: 19
+        }).addTo(map);
+    }
 
-        function setAPIStatus(online) {
-            apiOnline = online;
-            const statusEl = document.getElementById('apiStatus');
+    async function checkAPI() {
+        try {
+            const r = await fetch(API_BASE_URL + '/health');
+            setStatus(r.ok);
+        } catch { setStatus(false); }
+    }
 
-            if (online) {
-                statusEl.className = 'status-indicator status-online';
-                statusEl.innerHTML = '<span class="status-dot"></span>API Connected';
-            } else {
-                statusEl.className = 'status-indicator status-offline';
-                statusEl.innerHTML = '<span class="status-dot"></span>API Offline';
-            }
-        }
+    function setStatus(online) {
+        document.getElementById('statusDot').className = 'status-dot ' + (online ? 'online' : 'offline');
+        document.getElementById('statusText').className = 'status-text ' + (online ? 'online' : 'offline');
+        document.getElementById('statusText').textContent = online ? 'API Connected' : 'API Offline';
+    }
 
-        async function loadBusStops() {
-            const response = await fetch(`${API_BASE_URL}/stops`);
-            busStops = await response.json();
+    async function loadStops() {
+        try {
+            const r = await fetch(API_BASE_URL + '/stops');
+            busStops = await r.json();
+            displayAllStops();
+        } catch(e) { console.error('Failed to load stops', e); }
+    }
 
-            const sourceSelect = document.getElementById('sourceSelect');
-            const destSelect = document.getElementById('destSelect');
+    // ==================== AUTOCOMPLETE ====================
+    function setupAutocomplete(inputId, listId, type) {
+        const input = document.getElementById(inputId);
+        const list = document.getElementById(listId);
 
-            sourceSelect.innerHTML = '<option value="">Select starting point</option>';
-            destSelect.innerHTML = '<option value="">Select destination</option>';
+        input.addEventListener('input', () => {
+            const q = input.value.trim().toLowerCase();
+            if (q.length < 1) { list.classList.remove('show'); return; }
 
-            busStops.forEach(stop => {
-                const option = `<option value="${stop.id}">${stop.id} - ${stop.name}</option>`;
-                sourceSelect.innerHTML += option;
-                destSelect.innerHTML += option;
+            const matches = busStops.filter(s =>
+                s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q)
+            ).slice(0, 8);
+
+            if (matches.length === 0) { list.classList.remove('show'); return; }
+
+            list.innerHTML = matches.map(s => `
+                <div class="autocomplete-item" data-id="${s.id}" data-name="${s.name}">
+                    <div class="stop-badge">${s.id}</div>
+                    <div>
+                        <div class="stop-name">${s.name}</div>
+                        <div class="stop-coords">${s.latitude.toFixed(4)}, ${s.longitude.toFixed(4)}</div>
+                    </div>
+                </div>
+            `).join('');
+            list.classList.add('show');
+
+            list.querySelectorAll('.autocomplete-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const stop = busStops.find(s => s.id === item.dataset.id);
+                    input.value = stop.name;
+                    list.classList.remove('show');
+                    if (type === 'source') selectedSource = stop;
+                    else selectedDest = stop;
+                    highlightStopOnMap(stop, type);
+                });
+            });
+        });
+
+        input.addEventListener('focus', () => { if (input.value.trim().length > 0) input.dispatchEvent(new Event('input')); });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-box')) list.classList.remove('show');
+        });
+    }
+
+    // ==================== MY LOCATION ====================
+    function useMyLocation(type) {
+        if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
+
+        navigator.geolocation.getCurrentPosition(pos => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+
+            // Find nearest bus stop
+            let nearest = null, minDist = Infinity;
+            busStops.forEach(s => {
+                const d = Math.sqrt(Math.pow(s.latitude - lat, 2) + Math.pow(s.longitude - lng, 2));
+                if (d < minDist) { minDist = d; nearest = s; }
             });
 
-            sourceSelect.disabled = false;
-            destSelect.disabled = false;
-            document.getElementById('btnDijkstra').disabled = false;
-            document.getElementById('btnBfs').disabled = false;
+            if (nearest) {
+                const input = document.getElementById(type === 'source' ? 'sourceInput' : 'destInput');
+                input.value = nearest.name + ' (nearest)';
+                if (type === 'source') selectedSource = nearest;
+                else selectedDest = nearest;
 
-            displayAllStopsOnMap();
+                // Show my location on map
+                if (myLocationMarker) map.removeLayer(myLocationMarker);
+                const myIcon = L.divIcon({
+                    html: '<div style="width:16px;height:16px;background:#a855f7;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #a855f7;"></div>',
+                    className: '',
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                });
+                myLocationMarker = L.marker([lat, lng], { icon: myIcon }).addTo(map);
+                myLocationMarker.bindPopup('<b>📡 Your Location</b><br>Nearest stop: ' + nearest.name);
+                map.setView([lat, lng], 14);
+            }
+        }, () => alert('Could not get your location. Please enable GPS.'));
+    }
+
+    function swapLocations() {
+        const srcInput = document.getElementById('sourceInput');
+        const destInput = document.getElementById('destInput');
+        const tmpVal = srcInput.value; srcInput.value = destInput.value; destInput.value = tmpVal;
+        const tmpStop = selectedSource; selectedSource = selectedDest; selectedDest = tmpStop;
+    }
+
+    // ==================== MAP DISPLAY ====================
+    function createStopIcon(color, size) {
+        return L.divIcon({
+            html: `<div style="width:${size}px;height:${size}px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
+            className: '',
+            iconSize: [size, size],
+            iconAnchor: [size/2, size/2]
+        });
+    }
+
+    function displayAllStops() {
+        stopMarkers.forEach(m => map.removeLayer(m));
+        stopMarkers = [];
+        const bounds = [];
+
+        busStops.forEach(stop => {
+            const ll = [stop.latitude, stop.longitude];
+            bounds.push(ll);
+            const marker = L.marker(ll, { icon: createStopIcon('#3b82f6', 10) }).addTo(map);
+
+            // Get all bus routes that pass through this stop
+            const routes = new Set();
+            Object.entries(BUS_ROUTES).forEach(([key, buses]) => {
+                const parts = key.split('_');
+                if (parts.includes(stop.id)) buses.forEach(b => routes.add(b));
+            });
+
+            const routeTags = [...routes].map(r => `<span style="display:inline-block;padding:2px 6px;background:#3b82f6;border-radius:8px;font-size:10px;font-weight:700;color:white;margin:1px;">${r}</span>`).join('');
+
+            marker.bindPopup(`
+                <div style="font-family:'DM Sans',sans-serif;min-width:160px;">
+                    <div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:2px;">${stop.name}</div>
+                    <div style="font-size:11px;color:#64748b;font-family:monospace;margin-bottom:6px;">ID: ${stop.id}</div>
+                    ${routes.size > 0 ? `<div style="font-size:11px;color:#475569;margin-bottom:4px;">Bus Routes:</div><div style="display:flex;flex-wrap:wrap;gap:2px;">${routeTags}</div>` : ''}
+                </div>
+            `);
+            stopMarkers.push(marker);
+        });
+
+        if (bounds.length > 0) map.fitBounds(bounds, { padding: [50, 50] });
+    }
+
+    function highlightStopOnMap(stop, type) {
+        const color = type === 'source' ? '#22c55e' : '#ef4444';
+        const marker = L.marker([stop.latitude, stop.longitude], {
+            icon: createStopIcon(color, 16)
+        }).addTo(map);
+        marker.bindPopup(`<b>${type === 'source' ? '📍 Start' : '🎯 End'}: ${stop.name}</b>`).openPopup();
+        routeMarkers.push(marker);
+        map.setView([stop.latitude, stop.longitude], 14);
+    }
+
+    function displayRouteOnMap(result) {
+        routeMarkers.forEach(m => map.removeLayer(m));
+        routeMarkers = [];
+        if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+        roadPolylines.forEach(p => map.removeLayer(p));
+        roadPolylines = [];
+
+        const path = result.path;
+        if (!path || path.length === 0) return;
+
+        // Add markers for each stop
+        path.forEach((stop, i) => {
+            let color = '#f97316'; // mid
+            if (i === 0) color = '#22c55e'; // start
+            if (i === path.length - 1) color = '#ef4444'; // end
+            const size = (i === 0 || i === path.length - 1) ? 16 : 12;
+
+            const marker = L.marker([stop.latitude, stop.longitude], {
+                icon: createStopIcon(color, size)
+            }).addTo(map);
+
+            const label = i === 0 ? '📍 START' : i === path.length - 1 ? '🎯 END' : `Stop ${i + 1}`;
+            const busRoutes = i < path.length - 1 ? getBusRoutes(path[i].id, path[i+1].id) : [];
+            const busInfo = busRoutes.length > 0 ? `<br><span style="font-size:11px;color:#3b82f6;">🚌 ${busRoutes.join(', ')}</span>` : '';
+
+            marker.bindPopup(`<div style="font-family:'DM Sans',sans-serif;"><b>${label}</b><br>${stop.name}${busInfo}</div>`);
+            routeMarkers.push(marker);
+        });
+
+        // Draw road-following polylines
+        if (result.polylines && result.polylines.length > 0) {
+            const allBounds = [];
+            result.polylines.forEach((segment, i) => {
+                const busRoutes = i < path.length - 1 ? getBusRoutes(path[i].id, path[i+1].id) : [];
+                const poly = L.polyline(segment, {
+                    color: '#f97316',
+                    weight: 5,
+                    opacity: 0.85,
+                    dashArray: null
+                }).addTo(map);
+
+                // Add bus number label at midpoint
+                if (segment.length >= 2) {
+                    const midIdx = Math.floor(segment.length / 2);
+                    const midPoint = segment[midIdx];
+                    if (busRoutes.length > 0) {
+                        const busLabel = L.divIcon({
+                            html: `<div style="background:#1e293b;color:#60a5fa;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;font-family:'Space Mono',monospace;border:1px solid #3b82f6;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.4);">🚌 ${busRoutes.slice(0,3).join(', ')}</div>`,
+                            className: '',
+                            iconAnchor: [0, 0]
+                        });
+                        const labelMarker = L.marker(midPoint, { icon: busLabel }).addTo(map);
+                        routeMarkers.push(labelMarker);
+                    }
+                }
+
+                roadPolylines.push(poly);
+                segment.forEach(p => allBounds.push(p));
+            });
+            map.fitBounds(allBounds, { padding: [60, 60] });
+        } else {
+            // Fallback straight lines
+            const coords = path.map(s => [s.latitude, s.longitude]);
+            routeLine = L.polyline(coords, { color: '#f97316', weight: 4 }).addTo(map);
+            map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+        }
+    }
+
+    // ==================== SEARCH ====================
+    async function searchRoute() {
+        if (!selectedSource || !selectedDest) {
+            alert('Please select both a starting point and destination');
+            return;
+        }
+        if (selectedSource.id === selectedDest.id) {
+            alert('Source and destination cannot be the same');
+            return;
         }
 
-        async function findRoute(algorithm) {
-            const sourceId = document.getElementById('sourceSelect').value;
-            const destId = document.getElementById('destSelect').value;
-            const mode = document.getElementById('modeSelect').value;
-            const emergencyOnly = document.getElementById('emergencyMode').checked;
+        showLoading();
 
-            if (!sourceId || !destId || sourceId === destId) return;
-
-            showLoading();
-
-            const response = await fetch(`${API_BASE_URL}/route`, {
+        try {
+            const r = await fetch(API_BASE_URL + '/route', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    source: sourceId,
-                    destination: destId,
-                    algorithm,
-                    mode,
-                    emergencyOnly
+                    source: selectedSource.id,
+                    destination: selectedDest.id,
+                    algorithm: document.getElementById('algoSelect').value,
+                    mode: document.getElementById('modeSelect').value,
+                    emergencyOnly: false
                 })
             });
 
-            const result = await response.json();
-
+            const result = await r.json();
             if (result.found) {
                 displayResult(result);
-                displayRouteOnMap(result.path);     // ✅ OLD (kept)
-                drawRoadFollowingRoute(result);     // ✅ NEW (added)
+                displayRouteOnMap(result);
             } else {
-                displayNoRoute(result.message);
-                displayAllStopsOnMap();
+                showError(result.message || 'No route found');
             }
+        } catch(e) {
+            showError('Failed to connect to API. Is the backend running?');
         }
-
-        // ==================== MAP DISPLAY ====================
-        function displayAllStopsOnMap() {
-
-    // remove old stop markers if any (only first load safety)
-    stopMarkers.forEach(m => map.removeLayer(m));
-    stopMarkers = [];
-
-    const bounds = [];
-
-    busStops.forEach(stop => {
-        const latLng = [stop.latitude, stop.longitude];
-        bounds.push(latLng);
-
-        const marker = L.marker(latLng).addTo(map);
-        marker.bindPopup(`<b>${stop.id}</b><br>${stop.name}`);
-
-        stopMarkers.push(marker); // ✅ permanent
-    });
-
-    map.fitBounds(bounds, { padding: [50, 50] });
-}
-
-
-       function displayRouteOnMap(path) {
-
-    // remove previous route markers
-    routeMarkers.forEach(m => map.removeLayer(m));
-    routeMarkers = [];
-
-    const routeCoords = [];
-
-    path.forEach((stop, i) => {
-        const latLng = [stop.latitude, stop.longitude];
-        routeCoords.push(latLng);
-
-        const marker = L.marker(latLng).addTo(map);
-        marker.bindPopup(`${i + 1}. ${stop.name}`);
-
-        routeMarkers.push(marker); // ❌ temporary
-    });
-
-    if (routeLine) map.removeLayer(routeLine);
-
-    routeLine = L.polyline(routeCoords, {
-        color: '#EA4335',
-        weight: 3
-    }).addTo(map);
-
-    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
-}
-
-
-        // ==================== 🔥 NEW: ROAD-FOLLOWING ROUTE ====================
-        function drawRoadFollowingRoute(result) {
-
-    if (!result.polylines || result.polylines.length === 0) return;
-
-    // remove old straight line
-    if (routeLine) {
-        map.removeLayer(routeLine);
-        routeLine = null;
     }
 
-    // remove old road routes
-    roadPolylines.forEach(p => map.removeLayer(p));
-    roadPolylines = [];
-
-    const bounds = [];
-
-    result.polylines.forEach(segment => {
-        const poly = L.polyline(segment, {
-            color: '#EA4335',
-            weight: 5,
-            opacity: 0.9
-        }).addTo(map);
-
-        roadPolylines.push(poly); // ✅ track it
-
-        segment.forEach(p => bounds.push(p));
-    });
-
-    map.fitBounds(bounds, { padding: [50, 50] });
-}
-
-
-        function clearMap() {
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
-            if (routeLine) map.removeLayer(routeLine);
-            routeLine = null;
-        }
-
-            // ==================== UI DISPLAY FUNCTIONS ====================
-
-            function displayResult(result) {
-                const container = document.getElementById('resultContainer');
-
-                const modeLabels = {
-                    'distance': 'km',
-                    'time': 'min',
-                    'cost': 'Rs.',
-                    'stops': 'transfers'
-                };
-
-                let pathHTML = '';
-                result.path.forEach((stop, index) => {
-                    pathHTML += `
-                        <div class="stop-item">
-                            <div class="stop-number">${index + 1}</div>
-                            <div class="stop-info">
-                                <div class="stop-name">${stop.name}</div>
-                                <div class="stop-id">Stop ${stop.id}</div>
-                            </div>
-                        </div>
-                    `;
-                    if (index < result.path.length - 1) {
-                        pathHTML += '<div class="arrow">↓</div>';
-                    }
-                });
-
-                container.innerHTML = `
-                    <h3>
-                        Route Found!
-                        <span class="algorithm-badge badge-${result.algorithm}">
-                            ${result.algorithm}
-                        </span>
-                    </h3>
-
-                    <div class="path-list">
-                        ${pathHTML}
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-value">${result.totalValue}</div>
-                            <div class="stat-label">${modeLabels[result.mode] || result.mode}</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value">${result.totalStops}</div>
-                            <div class="stat-label">Total Stops</div>
-                        </div>
-                    </div>
-                `;
+    async function searchAlternatives() {
+        if (!selectedSource || !selectedDest) { alert('Please select both locations'); return; }
+        showLoading();
+        try {
+            const r = await fetch(`${API_BASE_URL}/routes/alternatives?source=${selectedSource.id}&destination=${selectedDest.id}`);
+            const routes = await r.json();
+            if (routes.length > 0) {
+                displayAlternatives(routes);
+                displayRouteOnMap(routes[0]); // show first on map
+            } else {
+                showError('No alternative routes found');
             }
-
-            function displayNoRoute(message) {
-                document.getElementById('resultContainer').innerHTML = `
-                    <div class="no-result">
-                        <div class="no-result-icon">❌</div>
-                        <h3>No Route Found</h3>
-                        <p style="font-size: 13px;">${message}</p>
-                    </div>
-                `;
-            }
-
-            function showLoading() {
-                document.getElementById('resultContainer').innerHTML = `
-                    <div class="loading">
-                        <div class="loading-spinner"></div>
-                        <p>Calculating optimal route...</p>
-                    </div>
-                `;
-            }
-
-            function showError(message) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.innerHTML = `<strong>⚠️ Error:</strong> ${message}`;
-
-                const container = document.querySelector('.card');
-                const existing = container.querySelector('.error-message');
-                if (existing) existing.remove();
-
-                container.appendChild(errorDiv);
-
-                setTimeout(() => errorDiv.remove(), 5000);
-            }
-
-  function clearResults() {
-
-    // remove straight route line
-    if (routeLine) {
-        map.removeLayer(routeLine);
-        routeLine = null;
+        } catch(e) { showError('Failed to fetch alternatives'); }
     }
 
-    // remove road-following polylines
-    roadPolylines.forEach(p => map.removeLayer(p));
-    roadPolylines = [];
+    // ==================== UI DISPLAY ====================
+    function displayResult(result) {
+        const modeLabels = { distance:'km', time:'min', cost:'Rs.' };
+        const container = document.getElementById('resultsContainer');
 
-    // remove ONLY route markers
-    routeMarkers.forEach(m => map.removeLayer(m));
-    routeMarkers = [];
+        let pathHTML = '';
+        result.path.forEach((stop, i) => {
+            const cls = i === 0 ? 'start' : i === result.path.length - 1 ? 'end' : 'mid';
+            pathHTML += `
+                <div class="path-stop">
+                    <div class="path-stop-num ${cls}">${i + 1}</div>
+                    <div class="path-stop-info">
+                        <div class="name">${stop.name}</div>
+                        <div class="id">ID: ${stop.id}</div>
+                    </div>
+                </div>`;
 
-    // 🚫 DO NOT TOUCH stopMarkers (bus stops stay)
+            if (i < result.path.length - 1) {
+                const buses = getBusRoutes(result.path[i].id, result.path[i+1].id);
+                pathHTML += `
+                    <div class="path-connector">
+                        <div class="line"></div>
+                        <span class="bus-label">🚌 ${buses.join(', ')}</span>
+                    </div>`;
+            }
+        });
 
-    document.getElementById('resultContainer').innerHTML = `
-        <div class="no-result">
-            <div class="no-result-icon">🗺️</div>
-            <h3>No Route Selected</h3>
-            <p style="font-size: 13px;">Choose source and destination to find the best route</p>
-        </div>
-    `;
-}
+        container.innerHTML = `
+            <div class="route-card">
+                <div class="route-card-header">
+                    <h3>✅ Route Found</h3>
+                    <span class="algo-badge ${result.algorithm}">${result.algorithm}</span>
+                </div>
+                <div class="route-stats">
+                    <div class="stat-cell">
+                        <div class="value">${result.totalValue}</div>
+                        <div class="label">${modeLabels[result.mode] || result.mode}</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="value">${result.totalStops}</div>
+                        <div class="label">Stops</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="value">${result.path.length - 1}</div>
+                        <div class="label">Transfers</div>
+                    </div>
+                </div>
+                <div class="route-path">${pathHTML}</div>
+            </div>`;
+    }
 
+    function displayAlternatives(routes) {
+        const container = document.getElementById('resultsContainer');
+        container.innerHTML = routes.map((r, idx) => {
+            const pathNames = r.path.map(s => s.name).join(' → ');
+            return `
+                <div class="route-card" style="cursor:pointer;${idx===0?'border-color:#3b82f6;':''}">
+                    <div class="route-card-header">
+                        <h3>${idx === 0 ? '⭐ Best' : '🔄 Alt ' + idx}</h3>
+                        <span class="algo-badge ${r.algorithm || 'dijkstra'}">${r.algorithm || 'dijkstra'}</span>
+                    </div>
+                    <div class="route-stats">
+                        <div class="stat-cell"><div class="value">${r.totalValue}</div><div class="label">Value</div></div>
+                        <div class="stat-cell"><div class="value">${r.totalStops}</div><div class="label">Stops</div></div>
+                    </div>
+                    <div class="route-path" style="padding:12px 18px;">
+                        <div style="color:#94a3b8;font-size:13px;">${pathNames}</div>
+                    </div>
+                </div>`;
+        }).join('');
+    }
 
+    function showLoading() {
+        document.getElementById('resultsContainer').innerHTML = `
+            <div class="loading-state"><div class="spinner"></div><p>Finding best bus route...</p></div>`;
+    }
 
+    function showError(msg) {
+        document.getElementById('resultsContainer').innerHTML = `
+            <div class="error-state"><div class="icon">❌</div><h3>No Route Found</h3><p>${msg}</p></div>`;
+    }
+
+    function clearAll() {
+        routeMarkers.forEach(m => map.removeLayer(m)); routeMarkers = [];
+        if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+        roadPolylines.forEach(p => map.removeLayer(p)); roadPolylines = [];
+        if (myLocationMarker) { map.removeLayer(myLocationMarker); myLocationMarker = null; }
+
+        selectedSource = null; selectedDest = null;
+        document.getElementById('sourceInput').value = '';
+        document.getElementById('destInput').value = '';
+
+        document.getElementById('resultsContainer').innerHTML = `
+            <div class="empty-state">
+                <div class="icon">🗺️</div>
+                <h3>Search for a bus route</h3>
+                <p>Example: Nugegoda → Colombo Fort</p>
+            </div>`;
+
+        displayAllStops();
+    }
     </script>
 </body>
 </html>
