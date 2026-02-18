@@ -1,392 +1,518 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚌 Smart Bus Route Finder</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'DM Sans',sans-serif;background:#0f172a;height:100vh;overflow:hidden}
-        .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
-        .sidebar{background:#1e293b;display:flex;flex-direction:column;border-right:1px solid #334155;overflow:hidden}
-        .header{padding:16px 20px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:12px}
-        .header-icon{width:38px;height:38px;background:linear-gradient(135deg,#3b82f6,#06b6d4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
-        .header h1{color:#f1f5f9;font-size:16px;font-weight:700}
-        .header-sub{color:#64748b;font-size:11px;font-family:'Space Mono',monospace}
-        .status{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:11px;font-family:'Space Mono',monospace}
-        .status-dot{width:7px;height:7px;border-radius:50%;animation:pulse 2s infinite}
-        .status-dot.on{background:#22c55e}.status-dot.off{background:#ef4444}
-        .status.on{color:#22c55e}.status.off{color:#ef4444}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-        .search{padding:16px 20px;border-bottom:1px solid #334155}
-        .search-row{position:relative;margin-bottom:10px}
-        .search-row label{display:block;color:#64748b;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-        .sinput{width:100%;padding:11px 12px 11px 36px;background:#0f172a;border:2px solid #334155;border-radius:8px;color:#f1f5f9;font-size:14px;font-family:inherit;transition:border .2s}
-        .sinput:focus{outline:none;border-color:#3b82f6}
-        .sinput::placeholder{color:#475569}
-        .search-row .ico{position:absolute;left:12px;bottom:10px;font-size:14px}
-        .aclist{position:absolute;top:100%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;z-index:100;display:none}
-        .aclist.show{display:block}
-        .acitem{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid #0f172a;transition:background .1s}
-        .acitem:hover{background:#334155}
-        .acitem .badge{min-width:28px;height:24px;background:#3b82f6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white;font-family:'Space Mono',monospace}
-        .acitem .sname{color:#f1f5f9;font-size:13px}
-        .acitem .scoord{color:#64748b;font-size:10px;font-family:'Space Mono',monospace}
-        .loc-btn{display:inline-flex;align-items:center;gap:4px;background:none;border:1px dashed #475569;border-radius:6px;color:#3b82f6;font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;margin-top:4px}
-        .loc-btn:hover{border-color:#3b82f6;background:rgba(59,130,246,.06)}
-        .swap-btn{display:flex;width:30px;height:30px;border-radius:50%;border:2px solid #334155;background:#1e293b;color:#94a3b8;font-size:14px;cursor:pointer;margin:-4px auto;position:relative;z-index:5;align-items:center;justify-content:center;transition:all .2s}
-        .swap-btn:hover{border-color:#3b82f6;color:#3b82f6;transform:rotate(180deg)}
-        .go-btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:12px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;transition:all .2s}
-        .go-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,.3)}
-        .results{flex:1;overflow-y:auto;padding:0}
-        .results::-webkit-scrollbar{width:5px}
-        .results::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
-        .empty{text-align:center;padding:50px 20px;color:#64748b}
-        .empty .eicon{font-size:40px;margin-bottom:10px}
-        .empty h3{color:#94a3b8;font-size:15px;margin-bottom:4px}
-        .empty p{font-size:12px}
-        .tcard{border-bottom:1px solid #334155;padding:16px 20px;cursor:pointer;transition:background .15s}
-        .tcard:hover{background:rgba(59,130,246,.05)}
-        .tcard.active{background:rgba(59,130,246,.1);border-left:3px solid #3b82f6}
-        .tcard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-        .tcard-time{font-size:15px;font-weight:700;color:#f1f5f9}
-        .tcard-dur{font-size:13px;color:#94a3b8;font-family:'Space Mono',monospace}
-        .tcard-label{font-size:10px;font-weight:600;color:#22c55e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-        .seg-strip{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:8px}
-        .seg-walk{display:flex;align-items:center;gap:2px;color:#94a3b8;font-size:11px}
-        .seg-arrow{color:#475569;font-size:10px}
-        .seg-bus{display:flex;align-items:center;gap:3px}
-        .bus-badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;color:white;font-family:'Space Mono',monospace}
-        .bus-badge.c0{background:#4285F4}.bus-badge.c1{background:#34A853}.bus-badge.c2{background:#EA8600}
-        .bus-badge.c3{background:#EA4335}.bus-badge.c4{background:#7B1FA2}.bus-badge.c5{background:#0097A7}
-        .tcard-info{display:flex;gap:16px;font-size:11px;color:#64748b}
-        .tcard-info span{display:flex;align-items:center;gap:3px}
-        .tcard-detail{display:none;margin-top:12px;border-top:1px solid #334155;padding-top:12px}
-        .tcard.active .tcard-detail{display:block}
-        .detail-seg{display:flex;gap:12px;padding:6px 0}
-        .detail-seg .d-line{width:4px;border-radius:2px;min-height:32px;flex-shrink:0}
-        .detail-seg .d-line.walk{background:#94a3b8}
-        .detail-seg .d-line.bus{background:#4285F4}
-        .detail-seg .d-content{flex:1}
-        .detail-seg .d-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
-        .detail-seg .d-type.walk{color:#94a3b8}
-        .detail-seg .d-type.bus{color:#60a5fa}
-        .detail-seg .d-text{font-size:12px;color:#cbd5e1}
-        .detail-seg .d-sub{font-size:10px;color:#64748b;margin-top:2px}
-        .loading{text-align:center;padding:40px}
-        .spinner{width:32px;height:32px;border:3px solid #334155;border-top-color:#3b82f6;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .map-wrap{position:relative}
-        #map{width:100%;height:100vh}
-        .map-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:rgba(15,23,42,.95);padding:20px 30px;border-radius:12px;border:1px solid #334155;text-align:center;display:none}
-        .map-loading.show{display:block}
-        .map-loading p{color:#94a3b8;font-size:13px;margin-top:8px}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚌 Smart Bus Route Finder - Sri Lanka</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg:#0f172a;--card:#1e293b;--border:#334155;--txt:#f1f5f9;--sub:#94a3b8;--dim:#64748b;
+    --accent:#3b82f6;--green:#22c55e;--red:#ef4444;--orange:#f97316;--purple:#a855f7;
+}
+.light{--bg:#f1f5f9;--card:#ffffff;--border:#e2e8f0;--txt:#1e293b;--sub:#475569;--dim:#94a3b8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);height:100vh;overflow:hidden;color:var(--txt);transition:background .3s,color .3s}
+.app{display:grid;grid-template-columns:420px 1fr;height:100vh}
+.sidebar{background:var(--card);display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;transition:background .3s}
+.header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.header-icon{width:34px;height:34px;background:linear-gradient(135deg,#3b82f6,#06b6d4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.header h1{font-size:14px;font-weight:700}
+.header-sub{color:var(--dim);font-size:10px;font-family:'Space Mono',monospace}
+.hdr-btns{margin-left:auto;display:flex;gap:4px}
+.hdr-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--sub);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:all .15s}
+.hdr-btn:hover,.hdr-btn.on{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,.1)}
+.status{display:flex;align-items:center;gap:4px;font-size:10px;font-family:'Space Mono',monospace;color:var(--dim)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s infinite}
+.status-dot.on{background:var(--green)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-        /* Map type switcher */
-        .map-type-ctrl{position:absolute;top:12px;right:12px;z-index:1000;display:flex;gap:4px;background:rgba(15,23,42,.9);backdrop-filter:blur(10px);border:1px solid #334155;border-radius:10px;padding:6px}
-        .map-type-btn{padding:6px 12px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;background:transparent;color:#94a3b8;transition:all .15s}
-        .map-type-btn.active{background:#3b82f6;color:white}
-        .map-type-btn:hover:not(.active){background:rgba(255,255,255,.1)}
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg)}
+.tab{flex:1;padding:8px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--dim);transition:all .15s}
+.tab:hover{color:var(--txt)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-icon{font-size:14px;display:block;margin-bottom:2px}
 
-        .legend{position:absolute;bottom:12px;right:12px;z-index:1000;background:rgba(15,23,42,.9);backdrop-filter:blur(10px);border:1px solid #334155;border-radius:10px;padding:10px 14px;font-size:10px}
-        .legend .ltitle{font-weight:700;color:#3b82f6;font-family:'Space Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-        .legend .litem{display:flex;align-items:center;gap:5px;margin-bottom:3px;color:#94a3b8}
-        .legend .ldot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+/* Search */
+.search{padding:12px 16px;border-bottom:1px solid var(--border)}
+.search-row{position:relative;margin-bottom:8px}
+.search-row label{display:block;color:var(--dim);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.sinput{width:100%;padding:9px 10px 9px 32px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-size:13px;font-family:inherit;transition:border .2s}
+.sinput:focus{outline:none;border-color:var(--accent)}
+.sinput::placeholder{color:var(--dim)}
+.search-row .ico{position:absolute;left:10px;bottom:8px;font-size:13px}
+.aclist{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:0 0 7px 7px;max-height:160px;overflow-y:auto;z-index:100;display:none}
+.aclist.show{display:block}
+.acitem{padding:7px 10px;cursor:pointer;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--bg);transition:background .1s;font-size:12px}
+.acitem:hover{background:var(--border)}
+.acitem .badge{min-width:26px;height:22px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:white;font-family:'Space Mono',monospace}
+.scoord{color:var(--dim);font-size:9px;font-family:'Space Mono',monospace}
+.row-btns{display:flex;gap:4px;margin-top:4px}
+.sm-btn{display:inline-flex;align-items:center;gap:3px;background:none;border:1px dashed var(--dim);border-radius:5px;color:var(--accent);font-size:10px;font-weight:600;padding:4px 8px;cursor:pointer}
+.sm-btn:hover{border-color:var(--accent);background:rgba(59,130,246,.06)}
+.swap-btn{display:flex;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:var(--card);color:var(--sub);font-size:12px;cursor:pointer;margin:-2px auto;position:relative;z-index:5;align-items:center;justify-content:center;transition:all .2s}
+.swap-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(180deg)}
+.go-btn{width:100%;padding:10px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;transition:all .2s}
+.go-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,.3)}
 
-        @media(max-width:900px){
-            .app{grid-template-columns:1fr}
-            .sidebar{max-height:55vh;overflow-y:auto}
-            #map{height:45vh}
-        }
-    </style>
+/* Panel content */
+.panel{flex:1;overflow-y:auto;padding:0;display:none}
+.panel.active{display:block}
+.panel::-webkit-scrollbar{width:4px}
+.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.empty{text-align:center;padding:40px 16px;color:var(--dim)}
+.empty .eicon{font-size:36px;margin-bottom:8px}
+.empty h3{color:var(--sub);font-size:14px;margin-bottom:3px}
+.empty p{font-size:11px}
+
+/* Transit cards */
+.tcard{border-bottom:1px solid var(--border);padding:12px 16px;cursor:pointer;transition:background .15s}
+.tcard:hover{background:rgba(59,130,246,.04)}
+.tcard.active{background:rgba(59,130,246,.08);border-left:3px solid var(--accent)}
+.tcard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tcard-time{font-size:14px;font-weight:700}
+.tcard-dur{font-size:12px;color:var(--sub);font-family:'Space Mono',monospace}
+.tcard-label{font-size:9px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.seg-strip{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-bottom:6px}
+.seg-walk{color:var(--sub);font-size:10px}
+.seg-arrow{color:var(--dim);font-size:9px}
+.bus-badge{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;color:white;font-family:'Space Mono',monospace}
+.bus-badge.c0{background:#4285F4}.bus-badge.c1{background:#34A853}.bus-badge.c2{background:#EA8600}
+.bus-badge.c3{background:#EA4335}.bus-badge.c4{background:#7B1FA2}.bus-badge.c5{background:#0097A7}
+.tcard-info{display:flex;gap:12px;font-size:10px;color:var(--dim)}
+.tcard-info span{display:flex;align-items:center;gap:2px}
+.tcard-detail{display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.tcard.active .tcard-detail{display:block}
+.dseg{display:flex;gap:10px;padding:4px 0}
+.dseg .dline{width:3px;border-radius:2px;min-height:28px;flex-shrink:0}
+.dseg .dline.walk{background:var(--sub)}
+.dseg .dcont{flex:1}
+.dseg .dtype{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px}
+.dseg .dtype.walk{color:var(--sub)}.dseg .dtype.bus{color:#60a5fa}
+.dseg .dtxt{font-size:11px}.dseg .dsub{font-size:9px;color:var(--dim);margin-top:1px}
+
+/* Schedule panel */
+.sch-card{padding:12px 16px;border-bottom:1px solid var(--border)}
+.sch-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bg)}
+.sch-bus{font-weight:700;font-size:13px}
+.sch-time{font-family:'Space Mono',monospace;font-size:12px;color:var(--accent)}
+.sch-wait{font-size:11px;color:var(--green);font-weight:600}
+.sch-type{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}
+.sch-type.sltb{background:rgba(34,197,94,.15);color:#22c55e}
+.sch-type.private{background:rgba(59,130,246,.15);color:#3b82f6}
+
+/* Fare panel */
+.fare-card{padding:16px;border-bottom:1px solid var(--border)}
+.fare-type{font-weight:700;font-size:14px;margin-bottom:4px}
+.fare-price{font-size:24px;font-weight:700;color:var(--accent);font-family:'Space Mono',monospace}
+.fare-detail{font-size:11px;color:var(--dim)}
+
+/* Alert card */
+.alert-card{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px}
+.alert-icon{font-size:20px;flex-shrink:0}
+.alert-title{font-weight:700;font-size:12px;margin-bottom:2px}
+.alert-msg{font-size:11px;color:var(--sub)}
+.alert-loc{font-size:10px;color:var(--dim);margin-top:2px}
+
+/* Chart */
+.chart-wrap{padding:16px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{width:80px;font-size:11px;font-weight:600;text-align:right}
+.bar-track{flex:1;height:20px;background:var(--bg);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:9px;color:white;font-weight:700;font-family:'Space Mono',monospace;transition:width .5s}
+
+/* Graph viz */
+#graphCanvas{width:100%;height:400px;background:var(--bg);border-radius:8px;margin:8px 0}
+
+/* Nearby */
+.nearby-card{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer}
+.nearby-card:hover{background:rgba(59,130,246,.04)}
+.nearby-dist{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);min-width:50px;text-align:right}
+.nearby-walk{font-size:10px;color:var(--dim)}
+
+/* History */
+.hist-card{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer}
+.hist-card:hover{background:rgba(59,130,246,.04)}
+.hist-route{font-size:12px;font-weight:600}
+.hist-time{font-size:10px;color:var(--dim);margin-left:auto}
+.hist-fav{font-size:14px;cursor:pointer;margin-left:4px}
+
+.loading{text-align:center;padding:30px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.map-wrap{position:relative}
+#map{width:100%;height:100vh}
+.map-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:rgba(15,23,42,.95);padding:16px 24px;border-radius:10px;border:1px solid var(--border);text-align:center;display:none}
+.map-loading.show{display:block}
+.map-loading p{color:var(--sub);font-size:12px;margin-top:6px}
+.map-type-ctrl{position:absolute;top:10px;right:10px;z-index:1000;display:flex;gap:3px;background:rgba(15,23,42,.85);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:8px;padding:4px}
+.map-type-btn{padding:5px 10px;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;background:transparent;color:var(--sub);transition:all .15s}
+.map-type-btn.active{background:var(--accent);color:white}
+.map-type-btn:hover:not(.active){background:rgba(255,255,255,.1)}
+.legend{position:absolute;bottom:10px;right:10px;z-index:1000;background:rgba(15,23,42,.85);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:9px}
+.legend .ltitle{font-weight:700;color:var(--accent);font-family:'Space Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.legend .litem{display:flex;align-items:center;gap:4px;margin-bottom:2px;color:var(--sub)}
+.legend .ldot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* Lang selector */
+.lang-sel{position:absolute;top:10px;left:10px;z-index:1000;display:flex;gap:2px;background:rgba(15,23,42,.85);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:8px;padding:3px}
+.lang-btn{padding:4px 8px;border:none;border-radius:4px;font-size:10px;cursor:pointer;background:transparent;color:var(--sub);font-weight:600}
+.lang-btn.active{background:var(--accent);color:white}
+
+@media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{max-height:55vh;overflow-y:auto}#map{height:45vh}}
+</style>
 </head>
 <body>
 <div class="app">
-    <div class="sidebar">
-        <div class="header">
-            <div class="header-icon">🚌</div>
-            <div><h1>Bus Route Finder</h1><div class="header-sub">Sri Lanka Transit</div></div>
-            <div class="status" id="status"><div class="status-dot off" id="sDot"></div><span id="sTxt">Offline</span></div>
+<div class="sidebar">
+    <div class="header">
+        <div class="header-icon">🚌</div>
+        <div><h1 data-i18n="title">Bus Route Finder</h1><div class="header-sub">Sri Lanka Transit</div></div>
+        <div class="hdr-btns">
+            <div class="hdr-btn" onclick="toggleTheme()" title="Dark/Light Mode">🌗</div>
+            <div class="hdr-btn" onclick="startVoice()" title="Voice Search" id="voiceBtn">🎤</div>
         </div>
+    </div>
+    <div style="padding:4px 16px;"><div class="status"><div class="status-dot" id="sDot"></div><span id="sTxt">Offline</span></div></div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('routes')"><span class="tab-icon">🔎</span>Routes</div>
+        <div class="tab" onclick="showTab('schedule')"><span class="tab-icon">🕐</span>Schedule</div>
+        <div class="tab" onclick="showTab('fare')"><span class="tab-icon">💰</span>Fare</div>
+        <div class="tab" onclick="showTab('nearby')"><span class="tab-icon">📍</span>Nearby</div>
+        <div class="tab" onclick="showTab('alerts')"><span class="tab-icon">⚠️</span>Alerts</div>
+        <div class="tab" onclick="showTab('more')"><span class="tab-icon">📊</span>More</div>
+    </div>
+
+    <!-- ROUTES PANEL -->
+    <div class="panel active" id="p-routes">
         <div class="search">
-            <div class="search-row">
-                <label>From</label><span class="ico">📍</span>
+            <div class="search-row"><label data-i18n="from">From</label><span class="ico">📍</span>
                 <input class="sinput" id="srcIn" placeholder="Your location..." autocomplete="off">
                 <div class="aclist" id="srcAC"></div>
-                <button class="loc-btn" onclick="useMyLocation()">📡 My Location</button>
+                <div class="row-btns"><button class="sm-btn" onclick="useMyLocation()">📡 GPS</button><button class="sm-btn" onclick="startVoice('src')">🎤 Voice</button></div>
             </div>
             <button class="swap-btn" onclick="swap()">⇅</button>
-            <div class="search-row">
-                <label>To</label><span class="ico">🎯</span>
+            <div class="search-row"><label data-i18n="to">To</label><span class="ico">🎯</span>
                 <input class="sinput" id="dstIn" placeholder="Where to?" autocomplete="off">
                 <div class="aclist" id="dstAC"></div>
             </div>
-            <button class="go-btn" onclick="findTransit()">🔎 Search Bus Routes</button>
+            <button class="go-btn" onclick="findTransit()" data-i18n="search">🔎 Search Bus Routes</button>
         </div>
-        <div class="results" id="results">
-            <div class="empty"><div class="eicon">🗺️</div><h3>Search for a bus route</h3><p>Example: Nugegoda → Fort Railway Station</p></div>
+        <div id="results"><div class="empty"><div class="eicon">🗺️</div><h3 data-i18n="searchHint">Search for a bus route</h3><p>Nugegoda → Fort Railway Station</p></div></div>
+        <!-- Route comparison chart -->
+        <div id="chartArea" style="display:none"></div>
+    </div>
+
+    <!-- SCHEDULE PANEL -->
+    <div class="panel" id="p-schedule">
+        <div class="search" style="padding:12px 16px">
+            <label style="color:var(--dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">Select Bus Stop</label>
+            <select class="sinput" id="schStop" style="padding-left:10px" onchange="loadSchedule()"></select>
+        </div>
+        <div id="schResults"><div class="empty"><div class="eicon">🕐</div><h3>Select a stop to see departures</h3></div></div>
+    </div>
+
+    <!-- FARE PANEL -->
+    <div class="panel" id="p-fare">
+        <div class="search" style="padding:12px 16px">
+            <label style="color:var(--dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">Distance (km)</label>
+            <input class="sinput" id="fareKm" type="number" placeholder="Enter distance..." style="padding-left:10px" value="10">
+            <button class="go-btn" onclick="calcFare()" style="margin-top:8px">💰 Calculate Fare</button>
+        </div>
+        <div id="fareResults"></div>
+    </div>
+
+    <!-- NEARBY PANEL -->
+    <div class="panel" id="p-nearby">
+        <div class="search" style="padding:12px 16px">
+            <button class="go-btn" onclick="findNearby()">📍 Find Nearby Bus Stops</button>
+        </div>
+        <div id="nearbyResults"><div class="empty"><div class="eicon">📍</div><h3>Find stops near you</h3><p>Uses your GPS location</p></div></div>
+    </div>
+
+    <!-- ALERTS PANEL -->
+    <div class="panel" id="p-alerts">
+        <div id="alertResults"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <!-- MORE PANEL (Graph, History, Favorites) -->
+    <div class="panel" id="p-more">
+        <div class="tabs" style="border-top:1px solid var(--border)">
+            <div class="tab active" onclick="showSubTab('history')">📜 History</div>
+            <div class="tab" onclick="showSubTab('favorites')">⭐ Favorites</div>
+            <div class="tab" onclick="showSubTab('graph')">🔗 Graph</div>
+            <div class="tab" onclick="showSubTab('algo')">⚡ Algorithm</div>
+        </div>
+        <div id="sub-history" class="panel active"></div>
+        <div id="sub-favorites" class="panel"></div>
+        <div id="sub-graph" class="panel"></div>
+        <div id="sub-algo" class="panel">
+            <div class="search" style="padding:12px 16px">
+                <label style="color:var(--dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">Algorithm Visualization</label>
+                <select class="sinput" id="algoSel" style="padding-left:10px">
+                    <option value="dijkstra">Dijkstra's Algorithm</option>
+                    <option value="bfs">BFS (Breadth-First Search)</option>
+                    <option value="astar">A* Algorithm</option>
+                </select>
+                <button class="go-btn" onclick="runAlgoViz()" style="margin-top:8px">⚡ Visualize Algorithm</button>
+            </div>
+            <div id="algoSteps"></div>
         </div>
     </div>
-    <div class="map-wrap">
-        <div id="map"></div>
-        <div class="map-loading" id="mapLoading"><div class="spinner"></div><p>Loading road route...</p></div>
-        <!-- Map Type Switcher -->
-        <div class="map-type-ctrl">
-            <button class="map-type-btn active" onclick="setMapType('roadmap',this)">Map</button>
-            <button class="map-type-btn" onclick="setMapType('satellite',this)">Satellite</button>
-            <button class="map-type-btn" onclick="setMapType('terrain',this)">Terrain</button>
-            <button class="map-type-btn" onclick="setMapType('hybrid',this)">Hybrid</button>
-        </div>
-        <div class="legend">
-            <div class="ltitle">Legend</div>
-            <div class="litem"><div class="ldot" style="background:#3b82f6"></div>Bus Stop</div>
-            <div class="litem"><div class="ldot" style="background:#22c55e"></div>Start</div>
-            <div class="litem"><div class="ldot" style="background:#ef4444"></div>End</div>
-            <div class="litem"><div class="ldot" style="background:#f97316"></div>Bus Route</div>
-            <div class="litem"><div class="ldot" style="background:#94a3b8"></div>Walking</div>
-        </div>
+</div>
+<div class="map-wrap">
+    <div id="map"></div>
+    <div class="map-loading" id="mapLoading"><div class="spinner"></div><p>Loading route...</p></div>
+    <div class="map-type-ctrl">
+        <button class="map-type-btn active" onclick="setMapType('roadmap',this)">Map</button>
+        <button class="map-type-btn" onclick="setMapType('satellite',this)">Satellite</button>
+        <button class="map-type-btn" onclick="setMapType('terrain',this)">Terrain</button>
+        <button class="map-type-btn" onclick="setMapType('hybrid',this)">Hybrid</button>
     </div>
+    <div class="lang-sel">
+        <button class="lang-btn active" onclick="setLang('en',this)">EN</button>
+        <button class="lang-btn" onclick="setLang('si',this)">සිං</button>
+        <button class="lang-btn" onclick="setLang('ta',this)">தமி</button>
+    </div>
+    <div class="legend">
+        <div class="ltitle">Legend</div>
+        <div class="litem"><div class="ldot" style="background:#4285F4"></div>Bus Stop</div>
+        <div class="litem"><div class="ldot" style="background:#22c55e"></div>Start</div>
+        <div class="litem"><div class="ldot" style="background:#ef4444"></div>End</div>
+        <div class="litem"><div class="ldot" style="background:#f97316"></div>Bus Route</div>
+        <div class="litem"><div class="ldot" style="background:#94a3b8"></div>Walking</div>
+    </div>
+</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const API = 'http://localhost:8080/api';
-const OSRM = 'https://router.project-osrm.org/route/v1/driving';
-const GKEY = 'AIzaSyAG0W7RJFWmsTR02I91CmFwTi32Y4Gwp9c';
-const COLORS = ['#4285F4','#34A853','#EA8600','#EA4335','#7B1FA2','#0097A7'];
-
-let map, stops=[], stopMarkers=[], routeLayers=[], selSrc=null, selDst=null;
+const API='http://localhost:8080/api',OSRM='https://router.project-osrm.org/route/v1/driving';
+const GKEY='AIzaSyAG0W7RJFWmsTR02I91CmFwTi32Y4Gwp9c';
+const COLORS=['#4285F4','#34A853','#EA8600','#EA4335','#7B1FA2','#0097A7'];
+let map,stops=[],stopMarkers=[],routeLayers=[],selSrc=null,selDst=null,tileLayers={},currentTile;
 const roadCache={};
-let tileLayers={};
-let currentTile=null;
+let favorites=JSON.parse(localStorage.getItem('busFav')||'[]');
+let history=JSON.parse(localStorage.getItem('busHist')||'[]');
 
-// ==================== MAP INIT ====================
-window.onload = () => {
-    map = L.map('map',{zoomControl:true}).setView([6.9271,79.8612],12);
-
-    // Google Maps tile layers (real Google Maps!)
-    tileLayers.roadmap = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key='+GKEY,{
-        maxZoom:20, attribution:'© Google Maps'
-    });
-    tileLayers.satellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key='+GKEY,{
-        maxZoom:20, attribution:'© Google Maps'
-    });
-    tileLayers.terrain = L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}&key='+GKEY,{
-        maxZoom:20, attribution:'© Google Maps'
-    });
-    tileLayers.hybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key='+GKEY,{
-        maxZoom:20, attribution:'© Google Maps'
-    });
-
-    // Default: Google roadmap
-    currentTile = tileLayers.roadmap;
-    currentTile.addTo(map);
-
-    checkAPI(); loadStops();
-    setupAC('srcIn','srcAC','src');
-    setupAC('dstIn','dstAC','dst');
+// ===== I18N =====
+const LANG={
+    en:{title:'Bus Route Finder',from:'From',to:'To',search:'🔎 Search Bus Routes',searchHint:'Search for a bus route',walk:'Walk',board:'Board',alight:'Alight',min:'min',stops:'stops',transfers:'transfer'},
+    si:{title:'බස් මාර්ග සෙවීම',from:'සිට',to:'දක්වා',search:'🔎 බස් මාර්ග සොයන්න',searchHint:'බස් මාර්ගයක් සොයන්න',walk:'ඇවිදීම',board:'නැගීම',alight:'බැසීම',min:'මිනි',stops:'නැවතුම්',transfers:'මාරු'},
+    ta:{title:'பேருந்து வழி தேடல்',from:'இருந்து',to:'வரை',search:'🔎 பேருந்து வழிகளைத் தேடு',searchHint:'பேருந்து வழியைத் தேடுங்கள்',walk:'நடை',board:'ஏறு',alight:'இறங்கு',min:'நிமி',stops:'நிறுத்தங்கள்',transfers:'மாற்றம்'}
 };
+let curLang='en';
+function setLang(l,btn){curLang=l;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.dataset.i18n;if(LANG[l][k])el.textContent=LANG[l][k];})}
 
-function setMapType(type, btn){
-    if(currentTile) map.removeLayer(currentTile);
-    currentTile = tileLayers[type];
-    currentTile.addTo(map);
-    document.querySelectorAll('.map-type-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-}
+// ===== THEME =====
+let isDark=true;
+function toggleTheme(){isDark=!isDark;document.body.classList.toggle('light',!isDark)}
 
-async function checkAPI(){try{const r=await fetch(API+'/health');setAPI(r.ok)}catch{setAPI(false)}}
-function setAPI(on){
-    document.getElementById('sDot').className='status-dot '+(on?'on':'off');
-    document.getElementById('sTxt').textContent=on?'Online':'Offline';
-    document.getElementById('status').className='status '+(on?'on':'off');
-}
-async function loadStops(){try{const r=await fetch(API+'/stops');stops=await r.json();showAllStops()}catch(e){console.error(e)}}
+// ===== INIT =====
+window.onload=()=>{
+    map=L.map('map',{zoomControl:true}).setView([6.9271,79.8612],12);
+    tileLayers.roadmap=L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key='+GKEY,{maxZoom:20,attribution:'© Google'});
+    tileLayers.satellite=L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key='+GKEY,{maxZoom:20});
+    tileLayers.terrain=L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}&key='+GKEY,{maxZoom:20});
+    tileLayers.hybrid=L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key='+GKEY,{maxZoom:20});
+    currentTile=tileLayers.roadmap;currentTile.addTo(map);
+    checkAPI();loadStops();setupAC('srcIn','srcAC','src');setupAC('dstIn','dstAC','dst');
+    loadAlerts();renderHistory();renderFavorites();
+};
+function setMapType(t,btn){if(currentTile)map.removeLayer(currentTile);currentTile=tileLayers[t];currentTile.addTo(map);
+document.querySelectorAll('.map-type-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
 
-function mkIcon(color,size){
-    return L.divIcon({html:`<div style="width:${size}px;height:${size}px;background:${color};border:2px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>`,className:'',iconSize:[size,size],iconAnchor:[size/2,size/2]});
-}
+async function checkAPI(){try{const r=await fetch(API+'/health');const on=r.ok;document.getElementById('sDot').className='status-dot'+(on?' on':'');document.getElementById('sTxt').textContent=on?'Online':'Offline'}catch{}}
+async function loadStops(){try{const r=await fetch(API+'/stops');stops=await r.json();showAllStops();populateSchSelect()}catch(e){console.error(e)}}
+function mkIcon(c,s){return L.divIcon({html:`<div style="width:${s}px;height:${s}px;background:${c};border:2px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,className:'',iconSize:[s,s],iconAnchor:[s/2,s/2]})}
+function showAllStops(){stopMarkers.forEach(m=>map.removeLayer(m));stopMarkers=[];const b=[];
+stops.forEach(s=>{const ll=[s.latitude,s.longitude];b.push(ll);const m=L.marker(ll,{icon:mkIcon('#4285F4',7)}).addTo(map);
+m.bindPopup(`<b>${s.name}</b><br><small>${s.id}</small>`);stopMarkers.push(m)});if(b.length)map.fitBounds(b,{padding:[30,30]})}
 
-function showAllStops(){
-    stopMarkers.forEach(m=>map.removeLayer(m));stopMarkers=[];
-    const bounds=[];
-    stops.forEach(s=>{
-        const ll=[s.latitude,s.longitude];bounds.push(ll);
-        const m=L.marker(ll,{icon:mkIcon('#4285F4',8)}).addTo(map);
-        m.bindPopup(`<div style="font-family:'DM Sans';"><b>${s.name}</b><br><small style="color:#666">${s.id} · ${s.latitude.toFixed(4)}, ${s.longitude.toFixed(4)}</small></div>`);
-        stopMarkers.push(m);
-    });
-    if(bounds.length)map.fitBounds(bounds,{padding:[40,40]});
-}
+// ===== TABS =====
+function showTab(t){document.querySelectorAll('.panel').forEach(p=>{if(p.id.startsWith('p-'))p.classList.remove('active')});
+document.getElementById('p-'+t).classList.add('active');document.querySelectorAll('.tabs>.tab').forEach((tb,i)=>tb.classList.toggle('active',tb.textContent.trim().toLowerCase().includes(t.slice(0,3))))}
+function showSubTab(t){document.querySelectorAll('#p-more .panel').forEach(p=>p.classList.remove('active'));
+document.getElementById('sub-'+t).classList.add('active');document.querySelectorAll('#p-more .tabs .tab').forEach(tb=>tb.classList.toggle('active',tb.textContent.toLowerCase().includes(t.slice(0,4))))}
 
-// ==================== AUTOCOMPLETE ====================
-function setupAC(inId,listId,type){
-    const inp=document.getElementById(inId),list=document.getElementById(listId);
-    inp.addEventListener('input',()=>{
-        const q=inp.value.trim().toLowerCase();
-        if(q.length<1){list.classList.remove('show');return}
-        const m=stops.filter(s=>s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q)).slice(0,6);
-        if(!m.length){list.classList.remove('show');return}
-        list.innerHTML=m.map(s=>`<div class="acitem" data-id="${s.id}"><div class="badge">${s.id}</div><div><div class="sname">${s.name}</div><div class="scoord">${s.latitude.toFixed(4)}, ${s.longitude.toFixed(4)}</div></div></div>`).join('');
-        list.classList.add('show');
-        list.querySelectorAll('.acitem').forEach(it=>it.onclick=()=>{
-            const st=stops.find(s=>s.id===it.dataset.id);inp.value=st.name;list.classList.remove('show');
-            if(type==='src')selSrc=st;else selDst=st;
-        });
-    });
-    document.addEventListener('click',e=>{if(!e.target.closest('.search-row'))list.classList.remove('show')});
-}
+// ===== AUTOCOMPLETE =====
+function setupAC(inId,listId,type){const inp=document.getElementById(inId),list=document.getElementById(listId);
+inp.addEventListener('input',()=>{const q=inp.value.trim().toLowerCase();if(q.length<1){list.classList.remove('show');return}
+const m=stops.filter(s=>s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q)).slice(0,6);
+if(!m.length){list.classList.remove('show');return}
+list.innerHTML=m.map(s=>`<div class="acitem" data-id="${s.id}"><div class="badge">${s.id}</div><div><div>${s.name}</div><div class="scoord">${s.latitude.toFixed(4)}, ${s.longitude.toFixed(4)}</div></div></div>`).join('');
+list.classList.add('show');list.querySelectorAll('.acitem').forEach(it=>it.onclick=()=>{const st=stops.find(s=>s.id===it.dataset.id);inp.value=st.name;list.classList.remove('show');if(type==='src')selSrc=st;else selDst=st})});
+document.addEventListener('click',e=>{if(!e.target.closest('.search-row'))list.classList.remove('show')})}
 
-function useMyLocation(){
-    if(!navigator.geolocation){alert('Geolocation not supported');return}
-    navigator.geolocation.getCurrentPosition(p=>{
-        const lat=p.coords.latitude,lng=p.coords.longitude;
-        let near=null,md=Infinity;
-        stops.forEach(s=>{const d=Math.hypot(s.latitude-lat,s.longitude-lng);if(d<md){md=d;near=s}});
-        if(near){document.getElementById('srcIn').value=near.name;selSrc=near}
-        // Show my location
-        const myM=L.marker([lat,lng],{icon:L.divIcon({
-            html:'<div style="width:16px;height:16px;background:#a855f7;border:3px solid white;border-radius:50%;box-shadow:0 0 12px #a855f7;"></div>',
-            className:'',iconSize:[16,16],iconAnchor:[8,8]
-        })}).addTo(map);
-        myM.bindPopup('<b>📡 Your Location</b><br>Nearest stop: '+(near?near.name:''));
-        routeLayers.push(myM);
-        map.setView([lat,lng],15);
-    },()=>alert('Enable GPS'));
-}
+function useMyLocation(){if(!navigator.geolocation){alert('GPS not supported');return}
+navigator.geolocation.getCurrentPosition(p=>{const lat=p.coords.latitude,lng=p.coords.longitude;let near=null,md=Infinity;
+stops.forEach(s=>{const d=Math.hypot(s.latitude-lat,s.longitude-lng);if(d<md){md=d;near=s}});
+if(near){document.getElementById('srcIn').value=near.name;selSrc=near}
+const m=L.marker([lat,lng],{icon:L.divIcon({html:'<div style="width:14px;height:14px;background:#a855f7;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #a855f7"></div>',className:'',iconSize:[14,14],iconAnchor:[7,7]})}).addTo(map);
+m.bindPopup('<b>📡 You</b>');routeLayers.push(m);map.setView([lat,lng],15)},()=>alert('Enable GPS'))}
+function swap(){const a=document.getElementById('srcIn'),b=document.getElementById('dstIn');const t=a.value;a.value=b.value;b.value=t;const ts=selSrc;selSrc=selDst;selDst=ts}
 
-function swap(){
-    const a=document.getElementById('srcIn'),b=document.getElementById('dstIn');
-    const t=a.value;a.value=b.value;b.value=t;
-    const ts=selSrc;selSrc=selDst;selDst=ts;
-}
+// ===== VOICE SEARCH =====
+function startVoice(field){if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('Voice not supported');return}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const rec=new SR();rec.lang='en-US';rec.continuous=false;
+document.getElementById('voiceBtn').classList.add('on');
+rec.onresult=e=>{const t=e.results[0][0].transcript;
+if(field==='src'){document.getElementById('srcIn').value=t;const m=stops.find(s=>s.name.toLowerCase().includes(t.toLowerCase()));if(m)selSrc=m}
+else{document.getElementById('dstIn').value=t;const m=stops.find(s=>s.name.toLowerCase().includes(t.toLowerCase()));if(m)selDst=m}
+document.getElementById('voiceBtn').classList.remove('on')};
+rec.onerror=()=>document.getElementById('voiceBtn').classList.remove('on');rec.start()}
 
-// ==================== OSRM ROAD ROUTING (FREE) ====================
-async function getRoadRoute(lat1,lng1,lat2,lng2){
-    const key=`${lat1},${lng1}-${lat2},${lng2}`;
-    if(roadCache[key])return roadCache[key];
-    try{
-        const resp=await fetch(`${OSRM}/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`);
-        const data=await resp.json();
-        if(data.routes&&data.routes[0]){
-            const coords=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-            roadCache[key]=coords;
-            return coords;
-        }
-    }catch(e){console.warn('OSRM error',e)}
-    return [[lat1,lng1],[lat2,lng2]];
-}
+// ===== OSRM ROUTING =====
+async function getRoad(a,b,c,d){const k=`${a},${b}-${c},${d}`;if(roadCache[k])return roadCache[k];
+try{const r=await fetch(`${OSRM}/${b},${a};${d},${c}?overview=full&geometries=geojson`);const j=await r.json();
+if(j.routes&&j.routes[0]){const co=j.routes[0].geometry.coordinates.map(p=>[p[1],p[0]]);roadCache[k]=co;return co}}catch(e){}return[[a,b],[c,d]]}
+async function getFullRoad(seg){if(seg.polyline&&seg.polyline.length>1){const a=[];for(let i=0;i<seg.polyline.length-1;i++){const p1=seg.polyline[i],p2=seg.polyline[i+1];
+const pts=await getRoad(p1[0],p1[1],p2[0],p2[1]);if(!a.length)a.push(...pts);else a.push(...pts.slice(1))}return a}return await getRoad(seg.fromLat,seg.fromLng,seg.toLat,seg.toLng)}
 
-async function getFullBusRoute(seg){
-    if(seg.polyline&&seg.polyline.length>1){
-        const all=[];
-        for(let i=0;i<seg.polyline.length-1;i++){
-            const p1=seg.polyline[i],p2=seg.polyline[i+1];
-            const pts=await getRoadRoute(p1[0],p1[1],p2[0],p2[1]);
-            if(!all.length)all.push(...pts);else all.push(...pts.slice(1));
-        }
-        return all;
-    }
-    return await getRoadRoute(seg.fromLat,seg.fromLng,seg.toLat,seg.toLng);
-}
+// ===== TRANSIT SEARCH =====
+async function findTransit(){if(!selSrc||!selDst){alert('Select both locations');return}if(selSrc.id===selDst.id){alert('Same location');return}
+addHistory(selSrc,selDst);document.getElementById('results').innerHTML='<div class="loading"><div class="spinner"></div><p>Finding routes...</p></div>';
+try{const r=await fetch(`${API}/transit?source=${selSrc.id}&destination=${selDst.id}`);const opts=await r.json();
+if(opts.length>0){renderOptions(opts);renderChart(opts)}else document.getElementById('results').innerHTML='<div class="empty"><div class="eicon">❌</div><h3>No routes found</h3></div>'}
+catch(e){document.getElementById('results').innerHTML='<div class="empty"><div class="eicon">⚠️</div><h3>API Error</h3></div>'}}
 
-// ==================== FIND TRANSIT ====================
-async function findTransit(){
-    if(!selSrc||!selDst){alert('Select both locations');return}
-    if(selSrc.id===selDst.id){alert('Same location');return}
-    document.getElementById('results').innerHTML='<div class="loading"><div class="spinner"></div><p>Finding bus routes...</p></div>';
-    try{
-        const r=await fetch(`${API}/transit?source=${selSrc.id}&destination=${selDst.id}`);
-        const opts=await r.json();
-        if(opts.length>0)renderOptions(opts);
-        else document.getElementById('results').innerHTML='<div class="empty"><div class="eicon">❌</div><h3>No routes found</h3></div>';
-    }catch(e){
-        document.getElementById('results').innerHTML='<div class="empty"><div class="eicon">⚠️</div><h3>API Error</h3><p>Is the backend running?</p></div>';
-    }
-}
-
-function renderOptions(opts){
-    document.getElementById('results').innerHTML=opts.map((opt,idx)=>{
-        const strip=opt.segments.map((seg,si)=>{
-            if(seg.type==='walk')return `<span class="seg-walk">🚶${seg.durationMinutes}m</span>${si<opt.segments.length-1?'<span class="seg-arrow">›</span>':''}`;
-            return `<span class="seg-bus">🚌<span class="bus-badge c${si%6}">${seg.busNumber}</span></span>${si<opt.segments.length-1?'<span class="seg-arrow">›</span>':''}`;
-        }).join('');
-        const detail=opt.segments.map((seg,si)=>{
-            if(seg.type==='walk')return `<div class="detail-seg"><div class="d-line walk"></div><div class="d-content"><div class="d-type walk">🚶 Walk ${seg.durationMinutes} min</div><div class="d-text">${seg.fromStop} → ${seg.toStop}</div></div></div>`;
-            return `<div class="detail-seg"><div class="d-line bus" style="background:${COLORS[si%6]}"></div><div class="d-content"><div class="d-type bus">🚌 Bus ${seg.busNumber} · ${seg.stopCount} stops · ${seg.durationMinutes} min</div><div class="d-text">${seg.fromStop} → ${seg.toStop}</div><div class="d-sub">${seg.distanceKm} km · Rs.${seg.costRs}</div></div></div>`;
-        }).join('');
-        return `<div class="tcard${idx===0?' active':''}" onclick="pickOpt(${idx})">
-            ${idx===0?`<div class="tcard-label">${opt.label}</div>`:''}
-            <div class="tcard-top"><span class="tcard-time">${opt.departureTime} — ${opt.arrivalTime}</span><span class="tcard-dur">${fmtD(opt.totalDurationMinutes)}</span></div>
-            <div class="seg-strip">${strip}</div>
-            <div class="tcard-info"><span>💰 Rs.${opt.totalCostRs}</span><span>📍 ${opt.totalStops} stops</span><span>🔄 ${opt.transfers} transfer${opt.transfers!==1?'s':''}</span></div>
-            <div class="tcard-detail">${detail}</div></div>`;
-    }).join('');
-    window._opts=opts;
-    drawOnMap(opts[0]);
-}
+function renderOptions(opts){document.getElementById('results').innerHTML=opts.map((o,i)=>{
+const strip=o.segments.map((s,si)=>s.type==='walk'?`<span class="seg-walk">🚶${s.durationMinutes}m</span><span class="seg-arrow">›</span>`:
+`<span>🚌<span class="bus-badge c${si%6}">${s.busNumber}</span></span>${si<o.segments.length-1?'<span class="seg-arrow">›</span>':''}`).join('');
+const det=o.segments.map((s,si)=>s.type==='walk'?`<div class="dseg"><div class="dline walk"></div><div class="dcont"><div class="dtype walk">🚶 Walk ${s.durationMinutes} min</div><div class="dtxt">${s.fromStop} → ${s.toStop}</div></div></div>`:
+`<div class="dseg"><div class="dline bus" style="background:${COLORS[si%6]}"></div><div class="dcont"><div class="dtype bus">🚌 Bus ${s.busNumber} · ${s.stopCount} stops · ${s.durationMinutes} min</div><div class="dtxt">${s.fromStop} → ${s.toStop}</div><div class="dsub">${s.distanceKm}km · Rs.${s.costRs}</div></div></div>`).join('');
+return`<div class="tcard${i===0?' active':''}" onclick="pickOpt(${i})">${i===0?`<div class="tcard-label">${o.label}</div>`:''}
+<div class="tcard-top"><span class="tcard-time">${o.departureTime} — ${o.arrivalTime}</span><span class="tcard-dur">${fmtD(o.totalDurationMinutes)}</span></div>
+<div class="seg-strip">${strip}</div><div class="tcard-info"><span>💰Rs.${o.totalCostRs}</span><span>📍${o.totalStops} stops</span><span>🔄${o.transfers}</span></div>
+<div class="tcard-detail">${det}</div></div>`}).join('');window._opts=opts;drawOnMap(opts[0])}
 function pickOpt(i){document.querySelectorAll('.tcard').forEach((c,j)=>c.classList.toggle('active',j===i));drawOnMap(window._opts[i])}
-function fmtD(m){return m<60?m+' min':Math.floor(m/60)+'h '+m%60+'m'}
+function fmtD(m){return m<60?m+'m':Math.floor(m/60)+'h'+m%60+'m'}
 
-// ==================== DRAW ON MAP (Real Roads via OSRM) ====================
-async function drawOnMap(opt){
-    routeLayers.forEach(l=>map.removeLayer(l));routeLayers=[];
-    const bounds=[];
-    document.getElementById('mapLoading').classList.add('show');
+// ===== ROUTE COMPARISON CHART =====
+function renderChart(opts){if(opts.length<2){document.getElementById('chartArea').style.display='none';return}
+document.getElementById('chartArea').style.display='block';const maxT=Math.max(...opts.map(o=>o.totalDurationMinutes)),maxC=Math.max(...opts.map(o=>o.totalCostRs));
+document.getElementById('chartArea').innerHTML='<div class="chart-wrap"><h3 style="font-size:13px;margin-bottom:10px;color:var(--sub)">📊 Route Comparison</h3>'+
+opts.map((o,i)=>`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;margin-bottom:4px">${o.label||'Route '+(i+1)} ${o.busNumbers.map(b=>`<span class="bus-badge c${i%6}" style="font-size:8px">${b}</span>`).join(' ')}</div>
+<div class="bar-row"><div class="bar-label">⏱ Time</div><div class="bar-track"><div class="bar-fill" style="width:${o.totalDurationMinutes/maxT*100}%;background:${COLORS[i%6]}">${o.totalDurationMinutes}m</div></div></div>
+<div class="bar-row"><div class="bar-label">💰 Cost</div><div class="bar-track"><div class="bar-fill" style="width:${o.totalCostRs/maxC*100}%;background:${COLORS[(i+1)%6]}">Rs.${o.totalCostRs}</div></div></div></div>`).join('')+'</div>'}
 
-    for(let si=0;si<opt.segments.length;si++){
-        const seg=opt.segments[si];
-        const from=[seg.fromLat,seg.fromLng],to=[seg.toLat,seg.toLng];
-        bounds.push(from,to);
+// ===== DRAW ON MAP =====
+async function drawOnMap(opt){routeLayers.forEach(l=>map.removeLayer(l));routeLayers=[];const bounds=[];
+document.getElementById('mapLoading').classList.add('show');
+for(let si=0;si<opt.segments.length;si++){const seg=opt.segments[si];const from=[seg.fromLat,seg.fromLng],to=[seg.toLat,seg.toLng];bounds.push(from,to);
+if(seg.type==='walk'){const wl=L.polyline([from,to],{color:'#888',weight:4,dashArray:'8,10',opacity:.7}).addTo(map);routeLayers.push(wl)}
+else{const ci=si%6;const road=await getFullRoad(seg);road.forEach(p=>bounds.push(p));
+const sh=L.polyline(road,{color:'rgba(0,0,0,.2)',weight:11,lineCap:'round'}).addTo(map);routeLayers.push(sh);
+const ml=L.polyline(road,{color:COLORS[ci],weight:7,opacity:.9,lineCap:'round'}).addTo(map);routeLayers.push(ml);
+const mid=road[Math.floor(road.length/2)];const bl=L.marker(mid,{icon:L.divIcon({html:`<div style="background:${COLORS[ci]};color:white;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;font-family:'Space Mono',monospace;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.4)">🚌 ${seg.busNumber}</div>`,className:'',iconAnchor:[20,-5]}),interactive:false}).addTo(map);routeLayers.push(bl);
+const bm=L.marker(from,{icon:mkIcon(COLORS[ci],12)}).addTo(map);bm.bindPopup(`<b>🚌 Board</b><br>${seg.fromStop}<br><b style="color:${COLORS[ci]}">Bus ${seg.busNumber}</b>`);routeLayers.push(bm);
+const am=L.marker(to,{icon:mkIcon(COLORS[ci],12)}).addTo(map);am.bindPopup(`<b>🔽 Alight</b><br>${seg.toStop}`);routeLayers.push(am)}}
+if(opt.segments.length>0){const f=opt.segments[0],l=opt.segments[opt.segments.length-1];
+const sm=L.marker([f.fromLat,f.fromLng],{icon:mkIcon('#22c55e',18)}).addTo(map);sm.bindPopup('<b>📍 Start</b>');routeLayers.push(sm);
+const em=L.marker([l.toLat,l.toLng],{icon:mkIcon('#ef4444',18)}).addTo(map);em.bindPopup('<b>🎯 Destination</b>');routeLayers.push(em)}
+document.getElementById('mapLoading').classList.remove('show');if(bounds.length)map.fitBounds(bounds,{padding:[50,50]});
 
-        if(seg.type==='walk'){
-            const wl=L.polyline([from,to],{color:'#888',weight:4,dashArray:'8,10',opacity:.7}).addTo(map);
-            routeLayers.push(wl);
-        } else {
-            const ci=si%6;
-            const road=await getFullBusRoute(seg);
-            road.forEach(p=>bounds.push(p));
+// === LIVE BUS SIMULATION ===
+simulateBus(opt)}
 
-            // Shadow
-            const sh=L.polyline(road,{color:'rgba(0,0,0,0.25)',weight:11,lineCap:'round',lineJoin:'round'}).addTo(map);
-            routeLayers.push(sh);
-            // Main colored route on road
-            const ml=L.polyline(road,{color:COLORS[ci],weight:7,opacity:.9,lineCap:'round',lineJoin:'round'}).addTo(map);
-            routeLayers.push(ml);
+// ===== REAL-TIME BUS TRACKING (Simulation) =====
+let busAnimMarker=null;
+function simulateBus(opt){if(busAnimMarker){map.removeLayer(busAnimMarker);busAnimMarker=null}
+const busSegs=opt.segments.filter(s=>s.type==='bus');if(!busSegs.length)return;
+const seg=busSegs[0];const from=[seg.fromLat,seg.fromLng],to=[seg.toLat,seg.toLng];
+busAnimMarker=L.marker(from,{icon:L.divIcon({html:'<div style="width:20px;height:20px;background:#f97316;border:3px solid white;border-radius:50%;box-shadow:0 0 12px #f97316;animation:pulse 1s infinite"></div>',className:'',iconSize:[20,20],iconAnchor:[10,10]}),zIndex:9999}).addTo(map);
+busAnimMarker.bindPopup(`<b>🚌 Live Bus ${seg.busNumber}</b><br>En route`);routeLayers.push(busAnimMarker);
+let step=0;const total=50;
+const iv=setInterval(()=>{step++;if(step>=total){clearInterval(iv);return}const t=step/total;
+const lat=from[0]+(to[0]-from[0])*t;const lng=from[1]+(to[1]-from[1])*t;
+if(busAnimMarker)busAnimMarker.setLatLng([lat,lng])},200)}
 
-            // Bus label
-            const mid=road[Math.floor(road.length/2)];
-            const bl=L.marker(mid,{icon:L.divIcon({
-                html:`<div style="background:${COLORS[ci]};color:white;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;font-family:'Space Mono',monospace;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.5)">🚌 ${seg.busNumber}</div>`,
-                className:'',iconAnchor:[20,-5]
-            }),interactive:false}).addTo(map);
-            routeLayers.push(bl);
+// ===== SCHEDULE =====
+function populateSchSelect(){const sel=document.getElementById('schStop');sel.innerHTML='<option value="">-- Select --</option>'+stops.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+async function loadSchedule(){const id=document.getElementById('schStop').value;if(!id)return;
+try{const r=await fetch(`${API}/schedule?stopId=${id}`);const d=await r.json();
+document.getElementById('schResults').innerHTML=`<div class="sch-card"><b>${d.stopName}</b> · <small>${d.timestamp}</small></div>`+
+(d.departures||[]).map(dep=>`<div class="sch-row"><div><span class="bus-badge c${parseInt(dep.busNumber)%6}">${dep.busNumber}</span> <span class="sch-type ${dep.type==='SLTB'?'sltb':'private'}">${dep.type}</span></div>
+<div class="sch-time">${dep.time}</div><div class="sch-wait">${dep.waitMinutes} min</div></div>`).join('')}catch(e){document.getElementById('schResults').innerHTML='<div class="empty"><div class="eicon">⚠️</div><h3>Error loading schedule</h3></div>'}}
 
-            // Board marker
-            const bm=L.marker(from,{icon:mkIcon(COLORS[ci],14)}).addTo(map);
-            bm.bindPopup(`<div style="font-family:'DM Sans'"><b>🚌 Board</b><br>${seg.fromStop}<br><b style="color:${COLORS[ci]}">Bus ${seg.busNumber}</b></div>`);
-            routeLayers.push(bm);
-            // Alight marker
-            const am=L.marker(to,{icon:mkIcon(COLORS[ci],14)}).addTo(map);
-            am.bindPopup(`<div style="font-family:'DM Sans'"><b>🔽 Alight</b><br>${seg.toStop}<br><b style="color:${COLORS[ci]}">Bus ${seg.busNumber}</b></div>`);
-            routeLayers.push(am);
-        }
-    }
+// ===== FARE CALCULATOR =====
+async function calcFare(){const km=parseFloat(document.getElementById('fareKm').value)||10;
+try{const r=await fetch(`${API}/fare?distanceKm=${km}`);const d=await r.json();
+document.getElementById('fareResults').innerHTML=[d.sltb,d.private,d.ac].map((f,i)=>`<div class="fare-card">
+<div class="fare-type">${['🚌 SLTB (Government)','🚐 Private Bus','❄️ AC / Luxury'][i]}</div>
+<div class="fare-price">Rs. ${f.fare}</div>
+<div class="fare-detail">Base: Rs.${f.baseFare} + Rs.${f.perKm}/km × ${km}km</div></div>`).join('')}catch(e){}}
 
-    // Start & End
-    if(opt.segments.length>0){
-        const f=opt.segments[0],l=opt.segments[opt.segments.length-1];
-        const sm=L.marker([f.fromLat,f.fromLng],{icon:mkIcon('#22c55e',20)}).addTo(map);
-        sm.bindPopup('<b>📍 Start</b>');routeLayers.push(sm);
-        const em=L.marker([l.toLat,l.toLng],{icon:mkIcon('#ef4444',20)}).addTo(map);
-        em.bindPopup('<b>🎯 Destination</b>');routeLayers.push(em);
-    }
+// ===== NEARBY STOPS =====
+async function findNearby(){if(!navigator.geolocation){alert('GPS not supported');return}
+document.getElementById('nearbyResults').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+navigator.geolocation.getCurrentPosition(async p=>{try{const r=await fetch(`${API}/stops/nearby?lat=${p.coords.latitude}&lng=${p.coords.longitude}&radiusKm=3`);const d=await r.json();
+document.getElementById('nearbyResults').innerHTML=d.length?d.map(n=>`<div class="nearby-card" onclick="map.setView([${n.stop.latitude},${n.stop.longitude}],16)">
+<div>📍</div><div style="flex:1"><div style="font-weight:600;font-size:12px">${n.stop.name}</div><div class="nearby-walk">🚶 ${n.walkMinutes} min walk</div></div>
+<div class="nearby-dist">${n.distanceKm} km</div></div>`).join(''):'<div class="empty"><h3>No stops nearby</h3></div>'}catch(e){}},()=>alert('Enable GPS'))}
 
-    document.getElementById('mapLoading').classList.remove('show');
-    if(bounds.length)map.fitBounds(bounds,{padding:[60,60]});
-}
+// ===== TRAFFIC ALERTS =====
+async function loadAlerts(){try{const r=await fetch(`${API}/traffic/alerts`);const d=await r.json();
+document.getElementById('alertResults').innerHTML=d.map(a=>{const icons={warning:'⚠️',construction:'🚧',info:'ℹ️',weather:'🌧️'};
+return`<div class="alert-card" onclick="map.setView([${a.latitude},${a.longitude}],15)"><div class="alert-icon">${icons[a.type]||'⚠️'}</div>
+<div><div class="alert-title">${a.title}</div><div class="alert-msg">${a.message}</div><div class="alert-loc">📍 ${a.location} · ${a.timestamp}</div></div></div>`}).join('')}catch(e){document.getElementById('alertResults').innerHTML='<div class="empty"><h3>Cannot load alerts</h3></div>'}}
+
+// ===== HISTORY & FAVORITES =====
+function addHistory(src,dst){history.unshift({src:src.id,srcN:src.name,dst:dst.id,dstN:dst.name,time:new Date().toLocaleTimeString()});
+history=history.slice(0,10);localStorage.setItem('busHist',JSON.stringify(history));renderHistory()}
+function renderHistory(){document.getElementById('sub-history').innerHTML=history.length?history.map((h,i)=>`<div class="hist-card" onclick="quickSearch('${h.src}','${h.dst}')">
+<div>🕐</div><div style="flex:1"><div class="hist-route">${h.srcN} → ${h.dstN}</div></div><div class="hist-time">${h.time}</div>
+<div class="hist-fav" onclick="event.stopPropagation();toggleFav('${h.src}','${h.srcN}','${h.dst}','${h.dstN}')">${isFav(h.src,h.dst)?'⭐':'☆'}</div></div>`).join(''):
+'<div class="empty"><div class="eicon">📜</div><h3>No recent searches</h3></div>'}
+function toggleFav(sId,sN,dId,dN){const idx=favorites.findIndex(f=>f.src===sId&&f.dst===dId);
+if(idx>=0)favorites.splice(idx,1);else favorites.push({src:sId,srcN:sN,dst:dId,dstN:dN});
+localStorage.setItem('busFav',JSON.stringify(favorites));renderFavorites();renderHistory()}
+function isFav(s,d){return favorites.some(f=>f.src===s&&f.dst===d)}
+function renderFavorites(){document.getElementById('sub-favorites').innerHTML=favorites.length?favorites.map(f=>`<div class="hist-card" onclick="quickSearch('${f.src}','${f.dst}')">
+<div>⭐</div><div style="flex:1"><div class="hist-route">${f.srcN} → ${f.dstN}</div></div>
+<div class="hist-fav" onclick="event.stopPropagation();toggleFav('${f.src}','${f.srcN}','${f.dst}','${f.dstN}')">❌</div></div>`).join(''):
+'<div class="empty"><div class="eicon">⭐</div><h3>No favorites yet</h3><p>Star routes from history</p></div>'}
+function quickSearch(sId,dId){const s=stops.find(x=>x.id===sId),d=stops.find(x=>x.id===dId);if(s&&d){selSrc=s;selDst=d;
+document.getElementById('srcIn').value=s.name;document.getElementById('dstIn').value=d.name;showTab('routes');findTransit()}}
+
+// ===== GRAPH VISUALIZATION =====
+async function loadGraph(){try{const r=await fetch(`${API}/graph`);const g=await r.json();
+let h=`<div style="padding:12px 16px"><h3 style="font-size:13px;margin-bottom:8px">🔗 Graph: ${g.totalNodes} nodes, ${g.totalEdges} edges</h3>`;
+// Draw on map
+routeLayers.forEach(l=>map.removeLayer(l));routeLayers=[];
+g.edges.forEach(e=>{const line=L.polyline([[e.fromLat,e.fromLng],[e.toLat,e.toLng]],{color:'#3b82f6',weight:2,opacity:.5}).addTo(map);
+line.bindPopup(`${e.from}→${e.to}: ${e.distance}km, ${e.time}min, Rs.${e.cost}`);routeLayers.push(line)});
+g.nodes.forEach(n=>{const m=L.marker([n.lat,n.lng],{icon:mkIcon('#f97316',10)}).addTo(map);m.bindPopup(`<b>${n.name}</b> (${n.id})`);routeLayers.push(m)});
+h+=`<p style="font-size:11px;color:var(--sub)">Graph edges shown on map. Click edges for details.</p></div>`;
+document.getElementById('sub-graph').innerHTML=h}catch(e){}}
+
+// ===== ALGORITHM STEP-BY-STEP =====
+async function runAlgoViz(){const algo=document.getElementById('algoSel').value;
+if(!selSrc||!selDst){alert('Select source and destination first');return}
+routeLayers.forEach(l=>map.removeLayer(l));routeLayers=[];showAllStops();
+const stepsDiv=document.getElementById('algoSteps');stepsDiv.innerHTML='<div class="loading"><div class="spinner"></div><p>Running '+algo+'...</p></div>';
+try{const r=await fetch(`${API}/route?source=${selSrc.id}&destination=${selDst.id}&algorithm=${algo}&mode=distance`);const d=await r.json();
+if(!d.found){stepsDiv.innerHTML='<div class="empty"><h3>No path found</h3></div>';return}
+let html='<div style="padding:12px 16px"><h3 style="font-size:13px;margin-bottom:8px">⚡ '+algo.toUpperCase()+' Steps</h3>';
+const path=d.path;
+for(let i=0;i<path.length;i++){const s=path[i];const isStart=i===0,isEnd=i===path.length-1;
+html+=`<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+<div style="width:24px;height:24px;background:${isStart?'#22c55e':isEnd?'#ef4444':'#3b82f6'};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:700">${i+1}</div>
+<div style="flex:1"><div style="font-weight:600;font-size:12px">${s.name}</div><div style="font-size:10px;color:var(--dim)">${isStart?'Start node - Added to queue':isEnd?'Destination reached!':'Exploring neighbors...'}</div></div></div>`;
+// Animate on map
+setTimeout(()=>{const m=L.marker([s.latitude,s.longitude],{icon:mkIcon(isStart?'#22c55e':isEnd?'#ef4444':'#f97316',14)}).addTo(map);
+m.bindPopup(`<b>Step ${i+1}</b><br>${s.name}`);routeLayers.push(m);
+if(i>0){const prev=path[i-1];const line=L.polyline([[prev.latitude,prev.longitude],[s.latitude,s.longitude]],{color:'#f97316',weight:4,opacity:.8,dashArray:'6,4'}).addTo(map);routeLayers.push(line)}},i*500)}
+html+=`<div style="margin-top:8px;padding:8px;background:rgba(34,197,94,.1);border-radius:6px;font-size:11px">✅ Path found: ${path.length} nodes visited. Total: ${d.totalValue} ${d.mode==='time'?'min':d.mode==='cost'?'Rs.':'km'}</div></div>`;
+stepsDiv.innerHTML=html}catch(e){stepsDiv.innerHTML='<div class="empty"><h3>Error running algorithm</h3></div>'}}
+
+// Load graph when More tab's Graph subtab is opened
+document.querySelectorAll('#p-more .tabs .tab').forEach(t=>t.addEventListener('click',()=>{if(t.textContent.includes('Graph'))loadGraph()}));
 </script>
 </body>
 </html>
