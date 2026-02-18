@@ -9,6 +9,8 @@ import jakarta.annotation.PostConstruct;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -281,5 +283,30 @@ public class RouteService {
         }
 
         response.setPolylines(polylines);
+    }
+
+    /**
+     * Get all graph edges for visualization
+     */
+    public List<Map<String, Object>> getGraphEdges() {
+        List<Map<String, Object>> edges = new ArrayList<>();
+        for (var entry : graph.adjList.entrySet()) {
+            BusStop from = entry.getKey();
+            for (var edge : entry.getValue()) {
+                Map<String, Object> e = new LinkedHashMap<>();
+                e.put("from", from.getId());
+                e.put("to", edge.getDestination().getId());
+                e.put("distance", edge.getDistance());
+                e.put("time", edge.getTime());
+                e.put("cost", edge.getCost());
+                e.put("safe", edge.isSafe());
+                e.put("fromLat", from.getLatitude());
+                e.put("fromLng", from.getLongitude());
+                e.put("toLat", edge.getDestination().getLatitude());
+                e.put("toLng", edge.getDestination().getLongitude());
+                edges.add(e);
+            }
+        }
+        return edges;
     }
 }
