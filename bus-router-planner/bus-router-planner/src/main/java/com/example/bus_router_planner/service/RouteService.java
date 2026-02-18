@@ -70,6 +70,20 @@ public class RouteService {
         BusStop townHall       = new BusStop("TWN",    "Town Hall (Colombo 7)",     6.9172, 79.8641);
         BusStop narahenpita    = new BusStop("NAR",    "Narahenpita",               6.8990, 79.8760);
 
+        // ==================== ROUTE 183 & 192/117: MORATUWA → NUGEGODA (New Stops) ====================
+        BusStop kurusaJn       = new BusStop("KRJ",    "Moratuwa Kurusa Junction",  6.7788, 79.8825);
+        BusStop katubedda      = new BusStop("KTB",    "Katubedda",                 6.7968, 79.8884);
+        BusStop angulana       = new BusStop("ANG",    "Angulana",                  6.8033, 79.8875);
+        BusStop soysapura      = new BusStop("SOY",    "Soysapura",                 6.8055, 79.8858);
+        BusStop golumadama     = new BusStop("GOL",    "Golumadama Junction",       6.8107, 79.8823);
+        BusStop vijitha        = new BusStop("VIJ",    "Vijitha",                   6.8174, 79.8751);
+        BusStop kalubowila     = new BusStop("KLB",    "Kalubowila",                6.8668, 79.8762);
+        BusStop kohuwala       = new BusStop("KHW",    "Kohuwala",                  6.8674, 79.8850);
+        // Route 192/117 specific stops
+        BusStop attidiya       = new BusStop("ATT",    "Attidiya Junction",         6.8399, 79.8846);
+        BusStop papiliyana     = new BusStop("PAP",    "Papiliyana",                6.8566, 79.8898);
+        BusStop gamsabhaJn     = new BusStop("GAM",    "Gamsabha Junction",         6.8666, 79.8971);
+
         // Add all stops
         allStops.add(fortRailway);
         allStops.add(pettah);
@@ -99,6 +113,18 @@ public class RouteService {
         allStops.add(horana);
         allStops.add(townHall);
         allStops.add(narahenpita);
+        // Route 183 & 192/117 new stops
+        allStops.add(kurusaJn);
+        allStops.add(katubedda);
+        allStops.add(angulana);
+        allStops.add(soysapura);
+        allStops.add(golumadama);
+        allStops.add(vijitha);
+        allStops.add(kalubowila);
+        allStops.add(kohuwala);
+        allStops.add(attidiya);
+        allStops.add(papiliyana);
+        allStops.add(gamsabhaJn);
 
         allStops.forEach(graph::addStop);
 
@@ -153,6 +179,27 @@ public class RouteService {
         graph.addBidirectionalRoute(nugegoda, rajagiriya,        5,  18, 35, true);
         graph.addBidirectionalRoute(maharagama, malabe,           4,  15, 30, true);
         graph.addBidirectionalRoute(kaduwela, kadawatha,          6,  22, 40, false);
+
+        // ==================== ROUTE 183: MORATUWA → NUGEGODA (via Mt Lavinia/Dehiwala) ====================
+        graph.addBidirectionalRoute(moratuwa, kurusaJn,          1,   3, 15, true);
+        graph.addBidirectionalRoute(kurusaJn, katubedda,         2,   6, 20, true);
+        graph.addBidirectionalRoute(katubedda, angulana,         1,   3, 15, true);
+        graph.addBidirectionalRoute(angulana, soysapura,         1,   2, 10, true);
+        graph.addBidirectionalRoute(soysapura, ratmalana,        1,   3, 10, true);
+        graph.addBidirectionalRoute(ratmalana, golumadama,       1,   3, 10, true);
+        graph.addBidirectionalRoute(golumadama, vijitha,         1,   3, 10, true);
+        graph.addBidirectionalRoute(vijitha, mountLavinia,       1,   4, 15, true);
+        graph.addBidirectionalRoute(mountLavinia, dehiwala,      2,  10, 25, true);  // already exists
+        graph.addBidirectionalRoute(dehiwala, kalubowila,        2,   8, 20, true);
+        graph.addBidirectionalRoute(kalubowila, kohuwala,        1,   4, 15, true);
+        graph.addBidirectionalRoute(kohuwala, nugegoda,          1,   4, 15, true);
+
+        // ==================== ROUTE 192/117: MORATUWA → NUGEGODA (via Attidiya/Papiliyana) ====================
+        // Shares Moratuwa→Vijitha with Route 183, then branches inland
+        graph.addBidirectionalRoute(vijitha, attidiya,           3,  10, 25, true);
+        graph.addBidirectionalRoute(attidiya, papiliyana,        2,   8, 20, true);
+        graph.addBidirectionalRoute(papiliyana, gamsabhaJn,      2,   6, 15, true);
+        graph.addBidirectionalRoute(gamsabhaJn, nugegoda,        1,   5, 15, true);
 
         System.out.println("✅ Graph initialized with " + allStops.size() + " bus stops and extended Sri Lanka routes");
     }

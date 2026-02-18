@@ -79,6 +79,25 @@ public class TransitService {
         BUS_NUMBERS.put("NUG_RAJ",  List.of("149","174"));
         BUS_NUMBERS.put("MAH_MAL",  List.of("255","149"));
         BUS_NUMBERS.put("KAD_KDW",  List.of("243","1"));
+
+        // Route 183: Moratuwa → Nugegoda (via Mt Lavinia coastal)
+        BUS_NUMBERS.put("MOR_KRJ",  List.of("183","155"));
+        BUS_NUMBERS.put("KRJ_KTB",  List.of("183","155"));
+        BUS_NUMBERS.put("KTB_ANG",  List.of("183","155"));
+        BUS_NUMBERS.put("ANG_SOY",  List.of("183","155"));
+        BUS_NUMBERS.put("SOY_RAT",  List.of("183","155"));
+        BUS_NUMBERS.put("RAT_GOL",  List.of("183","155"));
+        BUS_NUMBERS.put("GOL_VIJ",  List.of("183","155"));
+        BUS_NUMBERS.put("VIJ_MLV",  List.of("183","155"));
+        BUS_NUMBERS.put("DEH_KLB",  List.of("183"));
+        BUS_NUMBERS.put("KLB_KHW",  List.of("183"));
+        BUS_NUMBERS.put("KHW_NUG",  List.of("183"));
+
+        // Route 192/117: Moratuwa → Nugegoda (via Attidiya inland)
+        BUS_NUMBERS.put("VIJ_ATT",  List.of("192","117"));
+        BUS_NUMBERS.put("ATT_PAP",  List.of("192","117"));
+        BUS_NUMBERS.put("PAP_GAM",  List.of("192","117"));
+        BUS_NUMBERS.put("GAM_NUG",  List.of("192","117"));
     }
 
     /**
