@@ -296,8 +296,20 @@ const GKEY='AIzaSyAG0W7RJFWmsTR02I91CmFwTi32Y4Gwp9c';
 const COLORS=['#4285F4','#34A853','#EA8600','#EA4335','#7B1FA2','#0097A7'];
 let map,stops=[],stopMarkers=[],routeLayers=[],selSrc=null,selDst=null,tileLayers={},currentTile;
 const roadCache={};
-let favorites=JSON.parse(localStorage.getItem('busFav')||'[]');
+let favorites = [];
 let history=JSON.parse(localStorage.getItem('busHist')||'[]');
+
+// fav
+
+async function loadFavoritesFromAPI(){
+    try{
+        const response = await fetch(API + "/favorites");
+        favorites = await response.json();
+        renderFavorites();
+    }catch(e){
+        console.error("Error loading favorites", e);
+    }
+}
 
 // ===== I18N =====
 const LANG={
@@ -323,6 +335,7 @@ window.onload=()=>{
     currentTile=tileLayers.roadmap;currentTile.addTo(map);
     checkAPI();loadStops();setupAC('srcIn','srcAC','src');setupAC('dstIn','dstAC','dst');
     loadAlerts();renderHistory();renderFavorites();
+    loadFavoritesFromAPI();
 };
 function setMapType(t,btn){if(currentTile)map.removeLayer(currentTile);currentTile=tileLayers[t];currentTile.addTo(map);
 document.querySelectorAll('.map-type-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
@@ -463,23 +476,148 @@ return`<div class="alert-card" onclick="map.setView([${a.latitude},${a.longitude
 <div><div class="alert-title">${a.title}</div><div class="alert-msg">${a.message}</div><div class="alert-loc">📍 ${a.location} · ${a.timestamp}</div></div></div>`}).join('')}catch(e){document.getElementById('alertResults').innerHTML='<div class="empty"><h3>Cannot load alerts</h3></div>'}}
 
 // ===== HISTORY & FAVORITES =====
-function addHistory(src,dst){history.unshift({src:src.id,srcN:src.name,dst:dst.id,dstN:dst.name,time:new Date().toLocaleTimeString()});
-history=history.slice(0,10);localStorage.setItem('busHist',JSON.stringify(history));renderHistory()}
-function renderHistory(){document.getElementById('sub-history').innerHTML=history.length?history.map((h,i)=>`<div class="hist-card" onclick="quickSearch('${h.src}','${h.dst}')">
-<div>🕐</div><div style="flex:1"><div class="hist-route">${h.srcN} → ${h.dstN}</div></div><div class="hist-time">${h.time}</div>
-<div class="hist-fav" onclick="event.stopPropagation();toggleFav('${h.src}','${h.srcN}','${h.dst}','${h.dstN}')">${isFav(h.src,h.dst)?'⭐':'☆'}</div></div>`).join(''):
-'<div class="empty"><div class="eicon">📜</div><h3>No recent searches</h3></div>'}
-function toggleFav(sId,sN,dId,dN){const idx=favorites.findIndex(f=>f.src===sId&&f.dst===dId);
-if(idx>=0)favorites.splice(idx,1);else favorites.push({src:sId,srcN:sN,dst:dId,dstN:dN});
-localStorage.setItem('busFav',JSON.stringify(favorites));renderFavorites();renderHistory()}
-function isFav(s,d){return favorites.some(f=>f.src===s&&f.dst===d)}
-function renderFavorites(){document.getElementById('sub-favorites').innerHTML=favorites.length?favorites.map(f=>`<div class="hist-card" onclick="quickSearch('${f.src}','${f.dst}')">
-<div>⭐</div><div style="flex:1"><div class="hist-route">${f.srcN} → ${f.dstN}</div></div>
-<div class="hist-fav" onclick="event.stopPropagation();toggleFav('${f.src}','${f.srcN}','${f.dst}','${f.dstN}')">❌</div></div>`).join(''):
-'<div class="empty"><div class="eicon">⭐</div><h3>No favorites yet</h3><p>Star routes from history</p></div>'}
-function quickSearch(sId,dId){const s=stops.find(x=>x.id===sId),d=stops.find(x=>x.id===dId);if(s&&d){selSrc=s;selDst=d;
-document.getElementById('srcIn').value=s.name;document.getElementById('dstIn').value=d.name;showTab('routes');findTransit()}}
 
+// Load favorites from backend when page loads
+async function loadFavoritesFromAPI(){
+    try{
+        const res = await fetch(API + "/favorites");
+        favorites = await res.json();
+        renderFavorites();
+        renderHistory(); // refresh stars in history
+    }catch(e){
+        console.error("Failed to load favorites", e);
+    }
+}
+
+// ===== HISTORY (keep localStorage for history only) =====
+function addHistory(src,dst){
+    history.unshift({
+        src:src.id,
+        srcN:src.name,
+        dst:dst.id,
+        dstN:dst.name,
+        time:new Date().toLocaleTimeString()
+    });
+
+    history = history.slice(0,10);
+    localStorage.setItem('busHist',JSON.stringify(history));
+    renderHistory();
+}
+
+function renderHistory(){
+    document.getElementById('sub-history').innerHTML =
+    history.length ?
+    history.map((h,i)=>`
+        <div class="hist-card" onclick="quickSearch('${h.src}','${h.dst}')">
+            <div>🕐</div>
+            <div style="flex:1">
+                <div class="hist-route">${h.srcN} → ${h.dstN}</div>
+            </div>
+            <div class="hist-time">${h.time}</div>
+            <div class="hist-fav"
+                onclick="event.stopPropagation();toggleFav('${h.src}','${h.srcN}','${h.dst}','${h.dstN}')">
+                ${isFav(h.srcN,h.dstN)?'⭐':'☆'}
+            </div>
+        </div>
+    `).join('')
+    :
+    '<div class="empty"><div class="eicon">📜</div><h3>No recent searches</h3></div>';
+}
+
+// ===== FAVORITES (Now using Backend API) =====
+
+async function toggleFav(sId,sN,dId,dN){
+
+    const existing = favorites.find(f =>
+        f.source === sN && f.destination === dN
+    );
+
+    try{
+        if(existing){
+            // DELETE favorite from backend
+            await fetch(API + "/favorites/" + existing.id,{
+                method:"DELETE"
+            });
+        }else{
+            // SAVE favorite to backend
+            await fetch(API + "/favorites",{
+                method:"POST",
+                headers:{ "Content-Type":"application/json" },
+                body:JSON.stringify({
+                    source:sN,
+                    destination:dN,
+                    algorithm:"dijkstra"
+                })
+            });
+        }
+
+        await loadFavoritesFromAPI();
+
+    }catch(e){
+        console.error("Favorite update failed", e);
+    }
+}
+
+function isFav(sourceName,destinationName){
+    return favorites.some(f =>
+        f.source === sourceName &&
+        f.destination === destinationName
+    );
+}
+
+function renderFavorites(){
+
+    const container = document.getElementById('sub-favorites');
+
+    if(!favorites || favorites.length === 0){
+        container.innerHTML = `
+        <div class="empty">
+            <div class="eicon">⭐</div>
+            <h3>No favorites yet</h3>
+            <p>Star routes from history</p>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = favorites.map(f=>`
+        <div class="hist-card">
+            <div>⭐</div>
+            <div style="flex:1">
+                <div class="hist-route">${f.source} → ${f.destination}</div>
+            </div>
+            <div class="hist-fav"
+                onclick="event.stopPropagation();deleteFavorite(${f.id})">
+                ❌
+            </div>
+        </div>
+    `).join('');
+}
+
+async function deleteFavorite(id){
+    try{
+        await fetch(API + "/favorites/" + id,{
+            method:"DELETE"
+        });
+        await loadFavoritesFromAPI();
+    }catch(e){
+        console.error(e);
+    }
+}
+
+// Quick search remains same
+function quickSearch(sId,dId){
+    const s = stops.find(x=>x.id===sId),
+          d = stops.find(x=>x.id===dId);
+
+    if(s && d){
+        selSrc = s;
+        selDst = d;
+        document.getElementById('srcIn').value = s.name;
+        document.getElementById('dstIn').value = d.name;
+        showTab('routes');
+        findTransit();
+    }
+}
 // ===== GRAPH VISUALIZATION =====
 async function loadGraph(){try{const r=await fetch(`${API}/graph`);const g=await r.json();
 let h=`<div style="padding:12px 16px"><h3 style="font-size:13px;margin-bottom:8px">🔗 Graph: ${g.totalNodes} nodes, ${g.totalEdges} edges</h3>`;
