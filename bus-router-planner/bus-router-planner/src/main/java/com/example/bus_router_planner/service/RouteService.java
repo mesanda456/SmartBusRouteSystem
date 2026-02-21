@@ -356,4 +356,16 @@ public class RouteService {
         }
         return edges;
     }
+//
+//    private final CrowdPredictionService crowdPredictionService;
+//
+//    public RouteService(CrowdPredictionService crowdPredictionService) {
+//        this.crowdPredictionService = crowdPredictionService;
+//    }
+
+//    private final CrowdPredictionService crowdPredictionService;
+//
+//    public RouteService(final CrowdPredictionService crowdPredictionService) {
+//        this.crowdPredictionService = crowdPredictionService;
+//    }
 }
