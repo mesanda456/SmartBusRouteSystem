@@ -23,6 +23,9 @@ public class TransitService {
     @Autowired
     private RoadSegmentService roadSegmentService;
 
+    @Autowired
+    private CrowdPredictionService crowdPredictionService;
+
     // ==================== BUS ROUTE MAPPING ====================
     // Maps corridor segments to real Sri Lankan bus numbers
     private static final Map<String, List<String>> BUS_NUMBERS = new HashMap<>();
@@ -124,8 +127,7 @@ public class TransitService {
 
         // Dijkstra route
         RouteRequest mainRequest =
-                new RouteRequest(sourceId, destId, "dijkstra", mode, false);
-
+                new RouteRequest(sourceId, destId, "dijkstra", "distance", false);
         RouteResponse mainRoute = routeService.findRoute(mainRequest);
 
         if (mainRoute.isFound()) {
@@ -288,6 +290,12 @@ public class TransitService {
         option.setSegments(segments);
         option.setLabel(label);
         option.setAlgorithm(route.getAlgorithm());
+        // Crowd prediction
+        String crowd = crowdPredictionService.predictCrowd(departure);
+        int seats = crowdPredictionService.estimateSeatAvailability(crowd);
+
+        option.setCrowdLevel(crowd);
+        option.setAvailableSeats(seats);
 
         return option;
     }

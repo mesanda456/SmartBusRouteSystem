@@ -224,68 +224,68 @@ public class RouteService {
 
     public RouteResponse findRoute(RouteRequest request) {
 
-        if (request.getSource() == null || request.getDestination() == null) {
-            RouteResponse response = new RouteResponse();
-            response.setFound(false);
-            response.setMessage("Source and destination are required");
+        try {
+
+            if (request.getSource() == null || request.getDestination() == null) {
+                return RouteResponse.error("Source and destination are required");
+            }
+
+            BusStop source = graph.findStopById(request.getSource());
+            BusStop destination = graph.findStopById(request.getDestination());
+
+            if (source == null || destination == null) {
+                return RouteResponse.error("Invalid source or destination");
+            }
+
+            if (source.equals(destination)) {
+                return RouteResponse.error("Source and destination cannot be the same");
+            }
+
+            String algorithm = request.getAlgorithm() != null
+                    ? request.getAlgorithm().toLowerCase()
+                    : "dijkstra";
+
+            String mode = request.getMode() != null
+                    ? request.getMode().toLowerCase()
+                    : "distance";
+
+            RouteResponse response;
+
+            switch (algorithm) {
+
+                case "bfs":
+                    response = BFS.getRoute(graph, source, destination);
+                    break;
+
+                case "astar":
+                    response = AStar.getRoute(graph, source, destination, mode);
+                    break;
+
+                case "balanced":
+                    response = AlternativeRoutes.getBalancedRoute(
+                            graph, source, destination, 0.33, 0.33, 0.34
+                    );
+                    break;
+
+                case "dijkstra":
+                default:
+                    response = Dijkstra.getRoute(
+                            graph, source, destination, mode, request.isEmergencyOnly()
+                    );
+            }
+
+            attachPolylines(response);
             return response;
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            RouteResponse error = new RouteResponse();
+            error.setFound(false);
+            error.setMessage("Routing engine error");
+            return error;
         }
-
-        BusStop source = graph.findStopById(request.getSource());
-        BusStop destination = graph.findStopById(request.getDestination());
-
-        if (source == null || destination == null) {
-            RouteResponse response = new RouteResponse();
-            response.setFound(false);
-            response.setMessage("Invalid source or destination");
-            return response;
-        }
-
-        if (source.equals(destination)) {
-            RouteResponse response = new RouteResponse();
-            response.setFound(false);
-            response.setMessage("Source and destination cannot be the same");
-            return response;
-        }
-
-        String algorithm = request.getAlgorithm() != null
-                ? request.getAlgorithm().toLowerCase()
-                : "dijkstra";
-
-        RouteResponse response;
-
-        switch (algorithm) {
-
-            case "bfs":
-                response = BFS.getRoute(graph, source, destination);
-                break;
-
-            case "astar":
-                String mode = request.getMode() != null ? request.getMode() : "distance";
-                response = AStar.getRoute(graph, source, destination, mode);
-                break;
-
-            case "balanced":
-                response = AlternativeRoutes.getBalancedRoute(
-                        graph, source, destination, 0.33, 0.33, 0.34
-                );
-                break;
-
-            case "dijkstra":
-            default:
-                String dijkstraMode = request.getMode() != null
-                        ? request.getMode()
-                        : "distance";
-                boolean emergency = request.isEmergencyOnly();
-                response = Dijkstra.getRoute(
-                        graph, source, destination, dijkstraMode, emergency
-                );
-        }
-
-        // ✅ Attach road polylines
-        attachPolylines(response);
-
-        return response;
     }
 
     public List<RouteResponse> getAlternativeRoutes(String sourceId, String destinationId) {
