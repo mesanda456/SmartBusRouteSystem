@@ -157,32 +157,32 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);height:100vh;overflow
 .legend .litem{display:flex;align-items:center;gap:4px;margin-bottom:2px;color:var(--sub)}
 .legend .ldot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
-/* Rating panel */
-.star-rating{display:flex;gap:6px;margin:6px 0}
-.star-rating span{font-size:22px;cursor:pointer;transition:transform .1s}
-.star-rating span:hover,.star-rating span.selected{transform:scale(1.2)}
-.rating-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
-.rating-bar-track{flex:1;background:var(--border);border-radius:4px;height:7px;overflow:hidden}
-.rating-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#f59e0b,#fbbf24);transition:width .5s}
-.review-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px}
-.review-card .rc-head{display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;color:var(--dim)}
-.review-card .rc-stars{color:#f59e0b;letter-spacing:1px}
-.review-card .rc-comment{color:var(--sub);margin-top:4px}
-.top-bus-card{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px;cursor:pointer;transition:border-color .2s}
-.top-bus-card:hover{border-color:var(--accent)}
-.top-bus-num{min-width:44px;height:44px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:white}
+<!--/* Rating panel */-->
+<!--.star-rating{display:flex;gap:6px;margin:6px 0}-->
+<!--.star-rating span{font-size:22px;cursor:pointer;transition:transform .1s}-->
+<!--.star-rating span:hover,.star-rating span.selected{transform:scale(1.2)}-->
+<!--.rating-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}-->
+<!--.rating-bar-track{flex:1;background:var(&#45;&#45;border);border-radius:4px;height:7px;overflow:hidden}-->
+<!--.rating-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#f59e0b,#fbbf24);transition:width .5s}-->
+<!--.review-card{background:var(&#45;&#45;bg);border:1px solid var(&#45;&#45;border);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px}-->
+<!--.review-card .rc-head{display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;color:var(&#45;&#45;dim)}-->
+<!--.review-card .rc-stars{color:#f59e0b;letter-spacing:1px}-->
+<!--.review-card .rc-comment{color:var(&#45;&#45;sub);margin-top:4px}-->
+<!--.top-bus-card{display:flex;align-items:center;gap:10px;background:var(&#45;&#45;bg);border:1px solid var(&#45;&#45;border);border-radius:8px;padding:10px;margin-bottom:6px;cursor:pointer;transition:border-color .2s}-->
+<!--.top-bus-card:hover{border-color:var(&#45;&#45;accent)}-->
+<!--.top-bus-num{min-width:44px;height:44px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:white}-->
 
-<!--/* Ticket panel */-->
-<!--.ticket-card{background:linear-gradient(135deg,var(&#45;&#45;accent),#0ea5e9);border-radius:12px;padding:16px;color:white;margin:12px 16px;position:relative;overflow:hidden}-->
-<!--.ticket-card::after{content:'';position:absolute;right:-20px;top:50%;transform:translateY(-50%);width:40px;height:40px;background:var(&#45;&#45;bg);border-radius:50%}-->
-<!--.ticket-card::before{content:'';position:absolute;left:-20px;top:50%;transform:translateY(-50%);width:40px;height:40px;background:var(&#45;&#45;bg);border-radius:50%}-->
-<!--.ticket-id{font-family:'Space Mono',monospace;font-size:11px;opacity:.8;margin-bottom:4px}-->
-<!--.ticket-route{font-size:18px;font-weight:700;margin-bottom:2px}-->
-<!--.ticket-meta{font-size:11px;opacity:.8;margin-top:6px}-->
-<!--.ticket-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.4)}-->
-<!--.qr-box{background:white;border-radius:8px;padding:8px;text-align:center;margin:10px 16px}-->
-<!--.qr-box canvas{display:block;margin:0 auto}-->
-<!--.qr-box .qr-label{font-size:10px;color:#64748b;font-family:'Space Mono',monospace;margin-top:4px}-->
+/* Ticket panel */
+.ticket-card{background:linear-gradient(135deg,var(--accent),#0ea5e9);border-radius:12px;padding:16px;color:white;margin:12px 16px;position:relative;overflow:hidden}
+.ticket-card::after{content:'';position:absolute;right:-20px;top:50%;transform:translateY(-50%);width:40px;height:40px;background:var(--bg);border-radius:50%}
+.ticket-card::before{content:'';position:absolute;left:-20px;top:50%;transform:translateY(-50%);width:40px;height:40px;background:var(--bg);border-radius:50%}
+.ticket-id{font-family:'Space Mono',monospace;font-size:11px;opacity:.8;margin-bottom:4px}
+.ticket-route{font-size:18px;font-weight:700;margin-bottom:2px}
+.ticket-meta{font-size:11px;opacity:.8;margin-top:6px}
+.ticket-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.4)}
+.qr-box{background:white;border-radius:8px;padding:8px;text-align:center;margin:10px 16px}
+.qr-box canvas{display:block;margin:0 auto}
+.qr-box .qr-label{font-size:10px;color:#64748b;font-family:'Space Mono',monospace;margin-top:4px}
 
 
 
@@ -302,98 +302,98 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);height:100vh;overflow
         <div id="crowdResult"></div>
     </div>
 
-    <!-- RATING PANEL -->
-    <div class="panel" id="p-rating">
-        <div class="search" style="padding:12px 16px">
-            <label style="color:var(--dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">Bus Number</label>
-            <input class="sinput" id="ratingBusNum" placeholder="e.g. 100, 138, 400..." style="padding-left:10px" value="100">
-            <button class="go-btn" onclick="loadBusRatings()" style="margin-top:8px">⭐ Load Ratings</button>
-        </div>
-        <!-- Top rated buses -->
-        <div style="padding:0 16px 8px">
-            <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🏆 Top Rated Buses</div>
-            <div id="topBusList"><div class="loading"><div class="spinner"></div></div></div>
-        </div>
-        <!-- Ratings for selected bus -->
-        <div id="busRatingDetail" style="display:none;padding:0 16px 16px">
-            <div style="height:1px;background:var(--border);margin:8px 0"></div>
-            <div id="busRatingHeader"></div>
-            <div id="busRatingBars" style="margin:10px 0"></div>
-            <!-- Submit new rating -->
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin:10px 0">
-                <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;margin-bottom:8px">Rate This Bus</div>
-                <div style="font-size:12px;margin-bottom:4px;color:var(--sub)">Cleanliness</div>
-                <div class="star-rating" id="starsCleanliness">
-                    <span onclick="setStar('cleanliness',1)" data-val="1">☆</span>
-                    <span onclick="setStar('cleanliness',2)" data-val="2">☆</span>
-                    <span onclick="setStar('cleanliness',3)" data-val="3">☆</span>
-                    <span onclick="setStar('cleanliness',4)" data-val="4">☆</span>
-                    <span onclick="setStar('cleanliness',5)" data-val="5">☆</span>
-                </div>
-                <div style="font-size:12px;margin-bottom:4px;color:var(--sub)">Driver</div>
-                <div class="star-rating" id="starsDriver">
-                    <span onclick="setStar('driver',1)" data-val="1">☆</span>
-                    <span onclick="setStar('driver',2)" data-val="2">☆</span>
-                    <span onclick="setStar('driver',3)" data-val="3">☆</span>
-                    <span onclick="setStar('driver',4)" data-val="4">☆</span>
-                    <span onclick="setStar('driver',5)" data-val="5">☆</span>
-                </div>
-                <div style="font-size:12px;margin-bottom:4px;color:var(--sub)">Punctuality</div>
-                <div class="star-rating" id="starsPunctuality">
-                    <span onclick="setStar('punctuality',1)" data-val="1">☆</span>
-                    <span onclick="setStar('punctuality',2)" data-val="2">☆</span>
-                    <span onclick="setStar('punctuality',3)" data-val="3">☆</span>
-                    <span onclick="setStar('punctuality',4)" data-val="4">☆</span>
-                    <span onclick="setStar('punctuality',5)" data-val="5">☆</span>
-                </div>
-                <input class="sinput" id="ratingComment" placeholder="Write a comment (optional)..." style="padding-left:10px;margin-top:8px">
-                <button class="go-btn" onclick="submitRating()" style="margin-top:8px">✅ Submit Rating</button>
-                <div id="ratingMsg" style="font-size:12px;margin-top:6px;text-align:center"></div>
-            </div>
-            <!-- Recent reviews -->
-            <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Recent Reviews</div>
-            <div id="reviewsList"></div>
-        </div>
-    </div>
-
-<!--    &lt;!&ndash; TICKET PANEL &ndash;&gt;-->
-<!--    <div class="panel" id="p-ticket">-->
+<!--    &lt;!&ndash; RATING PANEL &ndash;&gt;-->
+<!--    <div class="panel" id="p-rating">-->
 <!--        <div class="search" style="padding:12px 16px">-->
-<!--            <label style="color:var(&#45;&#45;dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">From Stop</label>-->
-<!--            <input class="sinput" id="ticketFrom" placeholder="e.g. Colombo Fort" style="padding-left:10px">-->
-<!--            <label style="color:var(&#45;&#45;dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;margin-top:8px;display:block">To Stop</label>-->
-<!--            <input class="sinput" id="ticketTo" placeholder="e.g. Kandy" style="padding-left:10px">-->
-<!--            <label style="color:var(&#45;&#45;dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;margin-top:8px;display:block">Bus Number</label>-->
-<!--            <input class="sinput" id="ticketBus" placeholder="e.g. 100" style="padding-left:10px">-->
-<!--            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">-->
-<!--                <div>-->
-<!--                    <label style="color:var(&#45;&#45;dim);font-size:9px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">Fare (Rs.)</label>-->
-<!--                    <input class="sinput" id="ticketFare" type="number" placeholder="150" style="padding-left:10px" value="100">-->
-<!--                </div>-->
-<!--                <div>-->
-<!--                    <label style="color:var(&#45;&#45;dim);font-size:9px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">Distance (km)</label>-->
-<!--                    <input class="sinput" id="ticketDist" type="number" placeholder="25" style="padding-left:10px" value="20">-->
-<!--                </div>-->
-<!--            </div>-->
-<!--            <button class="go-btn" onclick="generateTicket()" style="margin-top:8px">🎫 Generate Ticket</button>-->
+<!--            <label style="color:var(&#45;&#45;dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">Bus Number</label>-->
+<!--            <input class="sinput" id="ratingBusNum" placeholder="e.g. 100, 138, 400..." style="padding-left:10px" value="100">-->
+<!--            <button class="go-btn" onclick="loadBusRatings()" style="margin-top:8px">⭐ Load Ratings</button>-->
 <!--        </div>-->
-<!--        <div id="ticketResult" style="display:none">-->
-<!--            <div class="ticket-card" id="ticketCard"></div>-->
-<!--            <div class="qr-box" id="qrBox">-->
-<!--                <canvas id="qrCanvas"></canvas>-->
-<!--                <div class="qr-label">Scan to verify ticket</div>-->
-<!--            </div>-->
-<!--            <div style="padding:0 16px 16px;display:flex;gap:8px">-->
-<!--                <button class="go-btn" onclick="printTicket()" style="flex:1;margin-top:0;background:var(&#45;&#45;border);color:var(&#45;&#45;txt)">🖨️ Print</button>-->
-<!--                <button class="go-btn" onclick="generateTicket()" style="flex:1;margin-top:0">🎫 New Ticket</button>-->
-<!--            </div>-->
+<!--        &lt;!&ndash; Top rated buses &ndash;&gt;-->
+<!--        <div style="padding:0 16px 8px">-->
+<!--            <div style="font-size:11px;font-weight:700;color:var(&#45;&#45;dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🏆 Top Rated Buses</div>-->
+<!--            <div id="topBusList"><div class="loading"><div class="spinner"></div></div></div>-->
 <!--        </div>-->
-<!--        <div id="ticketEmpty" style="padding:40px 16px;text-align:center;color:var(&#45;&#45;dim)">-->
-<!--            <div style="font-size:48px;margin-bottom:12px">🎫</div>-->
-<!--            <h3 style="color:var(&#45;&#45;sub);margin-bottom:4px">No ticket yet</h3>-->
-<!--            <p style="font-size:12px">Fill in the details above and generate your bus ticket</p>-->
+<!--        &lt;!&ndash; Ratings for selected bus &ndash;&gt;-->
+<!--        <div id="busRatingDetail" style="display:none;padding:0 16px 16px">-->
+<!--            <div style="height:1px;background:var(&#45;&#45;border);margin:8px 0"></div>-->
+<!--            <div id="busRatingHeader"></div>-->
+<!--            <div id="busRatingBars" style="margin:10px 0"></div>-->
+<!--            &lt;!&ndash; Submit new rating &ndash;&gt;-->
+<!--            <div style="background:var(&#45;&#45;bg);border:1px solid var(&#45;&#45;border);border-radius:8px;padding:12px;margin:10px 0">-->
+<!--                <div style="font-size:11px;font-weight:700;color:var(&#45;&#45;dim);text-transform:uppercase;margin-bottom:8px">Rate This Bus</div>-->
+<!--                <div style="font-size:12px;margin-bottom:4px;color:var(&#45;&#45;sub)">Cleanliness</div>-->
+<!--                <div class="star-rating" id="starsCleanliness">-->
+<!--                    <span onclick="setStar('cleanliness',1)" data-val="1">☆</span>-->
+<!--                    <span onclick="setStar('cleanliness',2)" data-val="2">☆</span>-->
+<!--                    <span onclick="setStar('cleanliness',3)" data-val="3">☆</span>-->
+<!--                    <span onclick="setStar('cleanliness',4)" data-val="4">☆</span>-->
+<!--                    <span onclick="setStar('cleanliness',5)" data-val="5">☆</span>-->
+<!--                </div>-->
+<!--                <div style="font-size:12px;margin-bottom:4px;color:var(&#45;&#45;sub)">Driver</div>-->
+<!--                <div class="star-rating" id="starsDriver">-->
+<!--                    <span onclick="setStar('driver',1)" data-val="1">☆</span>-->
+<!--                    <span onclick="setStar('driver',2)" data-val="2">☆</span>-->
+<!--                    <span onclick="setStar('driver',3)" data-val="3">☆</span>-->
+<!--                    <span onclick="setStar('driver',4)" data-val="4">☆</span>-->
+<!--                    <span onclick="setStar('driver',5)" data-val="5">☆</span>-->
+<!--                </div>-->
+<!--                <div style="font-size:12px;margin-bottom:4px;color:var(&#45;&#45;sub)">Punctuality</div>-->
+<!--                <div class="star-rating" id="starsPunctuality">-->
+<!--                    <span onclick="setStar('punctuality',1)" data-val="1">☆</span>-->
+<!--                    <span onclick="setStar('punctuality',2)" data-val="2">☆</span>-->
+<!--                    <span onclick="setStar('punctuality',3)" data-val="3">☆</span>-->
+<!--                    <span onclick="setStar('punctuality',4)" data-val="4">☆</span>-->
+<!--                    <span onclick="setStar('punctuality',5)" data-val="5">☆</span>-->
+<!--                </div>-->
+<!--                <input class="sinput" id="ratingComment" placeholder="Write a comment (optional)..." style="padding-left:10px;margin-top:8px">-->
+<!--                <button class="go-btn" onclick="submitRating()" style="margin-top:8px">✅ Submit Rating</button>-->
+<!--                <div id="ratingMsg" style="font-size:12px;margin-top:6px;text-align:center"></div>-->
+<!--            </div>-->
+<!--            &lt;!&ndash; Recent reviews &ndash;&gt;-->
+<!--            <div style="font-size:11px;font-weight:700;color:var(&#45;&#45;dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Recent Reviews</div>-->
+<!--            <div id="reviewsList"></div>-->
 <!--        </div>-->
 <!--    </div>-->
+
+    <!-- TICKET PANEL -->
+    <div class="panel" id="p-ticket">
+        <div class="search" style="padding:12px 16px">
+            <label style="color:var(--dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">From Stop</label>
+            <input class="sinput" id="ticketFrom" placeholder="e.g. Colombo Fort" style="padding-left:10px">
+            <label style="color:var(--dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;margin-top:8px;display:block">To Stop</label>
+            <input class="sinput" id="ticketTo" placeholder="e.g. Kandy" style="padding-left:10px">
+            <label style="color:var(--dim);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px;margin-top:8px;display:block">Bus Number</label>
+            <input class="sinput" id="ticketBus" placeholder="e.g. 100" style="padding-left:10px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+                <div>
+                    <label style="color:var(--dim);font-size:9px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">Fare (Rs.)</label>
+                    <input class="sinput" id="ticketFare" type="number" placeholder="150" style="padding-left:10px" value="100">
+                </div>
+                <div>
+                    <label style="color:var(--dim);font-size:9px;font-weight:600;text-transform:uppercase;margin-bottom:4px;display:block">Distance (km)</label>
+                    <input class="sinput" id="ticketDist" type="number" placeholder="25" style="padding-left:10px" value="20">
+                </div>
+            </div>
+            <button class="go-btn" onclick="generateTicket()" style="margin-top:8px">🎫 Generate Ticket</button>
+        </div>
+        <div id="ticketResult" style="display:none">
+            <div class="ticket-card" id="ticketCard"></div>
+            <div class="qr-box" id="qrBox">
+                <canvas id="qrCanvas"></canvas>
+                <div class="qr-label">Scan to verify ticket</div>
+            </div>
+            <div style="padding:0 16px 16px;display:flex;gap:8px">
+                <button class="go-btn" onclick="printTicket()" style="flex:1;margin-top:0;background:var(--border);color:var(--txt)">🖨️ Print</button>
+                <button class="go-btn" onclick="generateTicket()" style="flex:1;margin-top:0">🎫 New Ticket</button>
+            </div>
+        </div>
+        <div id="ticketEmpty" style="padding:40px 16px;text-align:center;color:var(--dim)">
+            <div style="font-size:48px;margin-bottom:12px">🎫</div>
+            <h3 style="color:var(--sub);margin-bottom:4px">No ticket yet</h3>
+            <p style="font-size:12px">Fill in the details above and generate your bus ticket</p>
+        </div>
+    </div>
 
 
     <!-- MORE PANEL (Graph, History, Favorites) -->
@@ -930,233 +930,233 @@ document.querySelectorAll('#p-more .tabs .tab').forEach(t=>t.addEventListener('c
 
 
 
-    // ===== RATING SERVICE =====
-const ratingState = { cleanliness: 0, driver: 0, punctuality: 0 };
+<!--    // ===== RATING SERVICE =====-->
+<!--const ratingState = { cleanliness: 0, driver: 0, punctuality: 0 };-->
 
-function setStar(category, val) {
-    ratingState[category] = val;
-    const containerId = 'stars' + category.charAt(0).toUpperCase() + category.slice(1);
-    document.querySelectorAll('#' + containerId + ' span').forEach((s, i) => {
-        s.textContent = i < val ? '⭐' : '☆';
-        s.classList.toggle('selected', i < val);
-    });
-}
-
-async function loadTopBuses() {
-    try {
-        const r = await fetch(`${API}/ratings/top`);
-        const buses = await r.json();
-        const el = document.getElementById('topBusList');
-        if (!buses.length) { el.innerHTML = '<div class="empty"><h3>No ratings yet</h3></div>'; return; }
-        el.innerHTML = buses.slice(0, 5).map((b, i) => `
-            <div class="top-bus-card" onclick="selectTopBus('${b.busNumber}')">
-                <div class="top-bus-num">${b.busNumber}</div>
-                <div style="flex:1">
-                    <div style="font-size:13px;font-weight:600;color:var(--txt)">Bus ${b.busNumber}</div>
-                    <div style="font-size:11px;color:var(--dim)">${b.totalReviews} reviews</div>
-                </div>
-                <div style="text-align:right">
-                    <div style="font-size:15px;font-weight:700;color:#f59e0b">${b.avgOverall} ⭐</div>
-                    <div style="font-size:10px;color:var(--dim)">#${i+1} rated</div>
-                </div>
-            </div>`).join('');
-    } catch(e) {
-        document.getElementById('topBusList').innerHTML = '<div style="font-size:12px;color:var(--dim);padding:8px">Could not load ratings. Is the backend running?</div>';
-    }
-}
-
-function selectTopBus(busNum) {
-    document.getElementById('ratingBusNum').value = busNum;
-    loadBusRatings();
-}
-
-async function loadBusRatings() {
-    const busNum = document.getElementById('ratingBusNum').value.trim();
-    if (!busNum) { alert('Please enter a bus number'); return; }
-    try {
-        const r = await fetch(`${API}/ratings/${busNum}`);
-        const d = await r.json();
-        document.getElementById('busRatingDetail').style.display = 'block';
-
-        // Header
-        const stars = '⭐'.repeat(Math.round(d.avgOverall));
-        document.getElementById('busRatingHeader').innerHTML = `
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-                <div style="width:56px;height:56px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:white">${busNum}</div>
-                <div>
-                    <div style="font-size:20px">${stars || '☆☆☆☆☆'}</div>
-                    <div style="font-size:22px;font-weight:700;color:var(--txt)">${d.avgOverall}/5</div>
-                    <div style="font-size:11px;color:var(--dim)">${d.totalReviews} reviews</div>
-                </div>
-            </div>`;
-
-        // Rating bars
-        const bars = [
-            { label: 'Cleanliness', val: d.avgCleanliness },
-            { label: 'Driver',      val: d.avgDriver },
-            { label: 'Punctuality', val: d.avgPunctuality }
-        ];
-        document.getElementById('busRatingBars').innerHTML = bars.map(b => `
-            <div class="rating-bar-row">
-                <span style="width:80px">${b.label}</span>
-                <div class="rating-bar-track"><div class="rating-bar-fill" style="width:${b.val/5*100}%"></div></div>
-                <span style="font-size:12px;font-weight:700;color:#f59e0b">${b.val}</span>
-            </div>`).join('');
-
-        // Reviews list
-        const reviews = d.reviews || [];
-        document.getElementById('reviewsList').innerHTML = reviews.length ? reviews.map(rv => `
-            <div class="review-card">
-                <div class="rc-head">
-                    <span class="rc-stars">${'⭐'.repeat(Math.round(rv.overall))}</span>
-                    <span>${rv.timestamp}</span>
-                </div>
-                <div style="font-size:11px;color:var(--sub)">
-                    🧹 Cleanliness: ${rv.cleanliness} &nbsp;|&nbsp; 🚌 Driver: ${rv.driver} &nbsp;|&nbsp; ⏱️ Punctuality: ${rv.punctuality}
-                </div>
-                ${rv.comment ? `<div class="rc-comment">"${rv.comment}"</div>` : ''}
-            </div>`).join('') : '<div style="font-size:12px;color:var(--dim);padding:8px">No reviews yet. Be the first!</div>';
-    } catch(e) {
-        alert('Could not load ratings. Make sure the backend is running.');
-    }
-}
-
-async function submitRating() {
-    const busNum = document.getElementById('ratingBusNum').value.trim();
-    const comment = document.getElementById('ratingComment').value.trim();
-    const msg = document.getElementById('ratingMsg');
-
-    if (!busNum) { alert('Please enter a bus number first'); return; }
-    if (!ratingState.cleanliness || !ratingState.driver || !ratingState.punctuality) {
-        msg.innerHTML = '<span style="color:#ef4444">⚠️ Please rate all 3 categories</span>'; return;
-    }
-
-    try {
-        msg.innerHTML = '<span style="color:var(--dim)">Submitting...</span>';
-        const r = await fetch(`${API}/ratings/${busNum}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                cleanliness: ratingState.cleanliness,
-                driver: ratingState.driver,
-                punctuality: ratingState.punctuality,
-                comment
-            })
-        });
-        if (r.ok) {
-            msg.innerHTML = '<span style="color:#22c55e">✅ Rating submitted!</span>';
-            // Reset stars
-            ['cleanliness','driver','punctuality'].forEach(c => setStar(c, 0));
-            ratingState.cleanliness = ratingState.driver = ratingState.punctuality = 0;
-            document.getElementById('ratingComment').value = '';
-            setTimeout(() => { loadBusRatings(); loadTopBuses(); }, 800);
-        }
-    } catch(e) {
-        msg.innerHTML = '<span style="color:#ef4444">❌ Error submitting rating</span>';
-    }
-}
-
-<!--// ===== TICKET SERVICE =====-->
-
-<!--// Simple QR code renderer (matrix-based, no library needed)-->
-<!--function drawQR(canvas, text) {-->
-<!--    // Use a basic visual QR placeholder - encode text as a simple pattern-->
-<!--    const ctx = canvas.getContext('2d');-->
-<!--    const size = 140;-->
-<!--    canvas.width = size; canvas.height = size;-->
-<!--    ctx.fillStyle = '#ffffff';-->
-<!--    ctx.fillRect(0, 0, size, size);-->
-<!--    ctx.fillStyle = '#000000';-->
-<!--    // Draw finder patterns (corners)-->
-<!--    function drawFinder(x, y) {-->
-<!--        ctx.fillRect(x, y, 21, 21);-->
-<!--        ctx.fillStyle = '#ffffff';-->
-<!--        ctx.fillRect(x+3, y+3, 15, 15);-->
-<!--        ctx.fillStyle = '#000000';-->
-<!--        ctx.fillRect(x+6, y+6, 9, 9);-->
-<!--    }-->
-<!--    drawFinder(7, 7); drawFinder(size-28, 7); drawFinder(7, size-28);-->
-<!--    // Encode text as pseudo-random data modules-->
-<!--    ctx.fillStyle = '#000000';-->
-<!--    const hash = text.split('').reduce((a, c) => ((a << 5) - a) + c.charCodeAt(0) | 0, 0);-->
-<!--    for (let row = 0; row < 25; row++) {-->
-<!--        for (let col = 0; col < 25; col++) {-->
-<!--            const bit = (hash ^ (row * 31 + col * 17) ^ (row << col)) & 1;-->
-<!--            if (bit) {-->
-<!--                const px = 7 + col * 5, py = 7 + row * 5;-->
-<!--                // skip finder pattern areas-->
-<!--                if ((px < 30 && py < 30) || (px > size-35 && py < 30) || (px < 30 && py > size-35)) continue;-->
-<!--                ctx.fillRect(px, py, 4, 4);-->
-<!--            }-->
-<!--        }-->
-<!--    }-->
-<!--    // Timing patterns-->
-<!--    for (let i = 14; i < size-14; i += 10) { ctx.fillRect(i, 33, 4, 4); ctx.fillRect(33, i, 4, 4); }-->
+<!--function setStar(category, val) {-->
+<!--    ratingState[category] = val;-->
+<!--    const containerId = 'stars' + category.charAt(0).toUpperCase() + category.slice(1);-->
+<!--    document.querySelectorAll('#' + containerId + ' span').forEach((s, i) => {-->
+<!--        s.textContent = i < val ? '⭐' : '☆';-->
+<!--        s.classList.toggle('selected', i < val);-->
+<!--    });-->
 <!--}-->
 
-<!--async function generateTicket() {-->
-<!--    const fromStop  = document.getElementById('ticketFrom').value.trim();-->
-<!--    const toStop    = document.getElementById('ticketTo').value.trim();-->
-<!--    const busNumber = document.getElementById('ticketBus').value.trim();-->
-<!--    const fare      = parseFloat(document.getElementById('ticketFare').value) || 100;-->
-<!--    const distKm    = parseFloat(document.getElementById('ticketDist').value) || 20;-->
-
-<!--    if (!fromStop || !toStop || !busNumber) { alert('Please fill in From, To and Bus Number'); return; }-->
-
+<!--async function loadTopBuses() {-->
 <!--    try {-->
-<!--        const r = await fetch(`${API}/ticket/generate`, {-->
-<!--            method: 'POST',-->
-<!--            headers: { 'Content-Type': 'application/json' },-->
-<!--            body: JSON.stringify({ fromStop, toStop, busNumber, fare, distanceKm: distKm })-->
-<!--        });-->
-<!--        const t = await r.json();-->
-<!--        document.getElementById('ticketEmpty').style.display = 'none';-->
-<!--        document.getElementById('ticketResult').style.display = 'block';-->
-
-<!--        document.getElementById('ticketCard').innerHTML = `-->
-<!--            <div class="ticket-id">${t.ticketId} &nbsp;|&nbsp; ${t.passengerType}</div>-->
-<!--            <div class="ticket-route">🚌 Bus ${t.busNumber}</div>-->
-<!--            <div style="font-size:13px;opacity:.9;margin-top:4px">📍 ${t.fromStop} → ${t.toStop}</div>-->
-<!--            <div class="ticket-row">-->
-<!--                <div>-->
-<!--                    <div style="font-size:10px;opacity:.7">FARE</div>-->
-<!--                    <div style="font-size:20px;font-weight:700">Rs. ${t.fare.toFixed(2)}</div>-->
-<!--                </div>-->
-<!--                <div>-->
-<!--                    <div style="font-size:10px;opacity:.7">DISTANCE</div>-->
-<!--                    <div style="font-size:16px;font-weight:700">${t.distanceKm} km</div>-->
+<!--        const r = await fetch(`${API}/ratings/top`);-->
+<!--        const buses = await r.json();-->
+<!--        const el = document.getElementById('topBusList');-->
+<!--        if (!buses.length) { el.innerHTML = '<div class="empty"><h3>No ratings yet</h3></div>'; return; }-->
+<!--        el.innerHTML = buses.slice(0, 5).map((b, i) => `-->
+<!--            <div class="top-bus-card" onclick="selectTopBus('${b.busNumber}')">-->
+<!--                <div class="top-bus-num">${b.busNumber}</div>-->
+<!--                <div style="flex:1">-->
+<!--                    <div style="font-size:13px;font-weight:600;color:var(&#45;&#45;txt)">Bus ${b.busNumber}</div>-->
+<!--                    <div style="font-size:11px;color:var(&#45;&#45;dim)">${b.totalReviews} reviews</div>-->
 <!--                </div>-->
 <!--                <div style="text-align:right">-->
-<!--                    <div style="font-size:10px;opacity:.7">STATUS</div>-->
-<!--                    <div style="font-size:13px;font-weight:700;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:20px">${t.status}</div>-->
+<!--                    <div style="font-size:15px;font-weight:700;color:#f59e0b">${b.avgOverall} ⭐</div>-->
+<!--                    <div style="font-size:10px;color:var(&#45;&#45;dim)">#${i+1} rated</div>-->
 <!--                </div>-->
-<!--            </div>-->
-<!--            <div class="ticket-meta">-->
-<!--                Issued: ${t.issueTime} &nbsp;|&nbsp; Valid until: ${t.validUntil}-->
-<!--            </div>`;-->
-
-<!--        // Draw QR code-->
-<!--        drawQR(document.getElementById('qrCanvas'), t.qrData);-->
-
+<!--            </div>`).join('');-->
 <!--    } catch(e) {-->
-<!--        alert('Could not generate ticket. Make sure the backend is running.');-->
+<!--        document.getElementById('topBusList').innerHTML = '<div style="font-size:12px;color:var(&#45;&#45;dim);padding:8px">Could not load ratings. Is the backend running?</div>';-->
 <!--    }-->
 <!--}-->
 
-<!--function printTicket() {-->
-<!--    const card = document.getElementById('ticketCard').outerHTML;-->
-<!--    const qr = document.getElementById('qrCanvas').toDataURL();-->
-<!--    const w = window.open('', '_blank');-->
-<!--    w.document.write(`<html><body style="font-family:sans-serif;padding:20px">${card}<br><img src="${qr}" style="width:140px"><br><p style="font-size:11px;color:#64748b">SLBUS Smart Ticket System</p></body></html>`);-->
-<!--    w.print(); w.close();-->
+<!--function selectTopBus(busNum) {-->
+<!--    document.getElementById('ratingBusNum').value = busNum;-->
+<!--    loadBusRatings();-->
 <!--}-->
 
-<!--// Auto-load top buses when Rating tab is opened-->
-<!--document.querySelectorAll('.tabs>.tab').forEach(tab => {-->
-<!--    tab.addEventListener('click', () => {-->
-<!--        if (tab.textContent.includes('Rating')) loadTopBuses();-->
-<!--    });-->
-<!--});-->
+<!--async function loadBusRatings() {-->
+<!--    const busNum = document.getElementById('ratingBusNum').value.trim();-->
+<!--    if (!busNum) { alert('Please enter a bus number'); return; }-->
+<!--    try {-->
+<!--        const r = await fetch(`${API}/ratings/${busNum}`);-->
+<!--        const d = await r.json();-->
+<!--        document.getElementById('busRatingDetail').style.display = 'block';-->
+
+<!--        // Header-->
+<!--        const stars = '⭐'.repeat(Math.round(d.avgOverall));-->
+<!--        document.getElementById('busRatingHeader').innerHTML = `-->
+<!--            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">-->
+<!--                <div style="width:56px;height:56px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:white">${busNum}</div>-->
+<!--                <div>-->
+<!--                    <div style="font-size:20px">${stars || '☆☆☆☆☆'}</div>-->
+<!--                    <div style="font-size:22px;font-weight:700;color:var(&#45;&#45;txt)">${d.avgOverall}/5</div>-->
+<!--                    <div style="font-size:11px;color:var(&#45;&#45;dim)">${d.totalReviews} reviews</div>-->
+<!--                </div>-->
+<!--            </div>`;-->
+
+<!--        // Rating bars-->
+<!--        const bars = [-->
+<!--            { label: 'Cleanliness', val: d.avgCleanliness },-->
+<!--            { label: 'Driver',      val: d.avgDriver },-->
+<!--            { label: 'Punctuality', val: d.avgPunctuality }-->
+<!--        ];-->
+<!--        document.getElementById('busRatingBars').innerHTML = bars.map(b => `-->
+<!--            <div class="rating-bar-row">-->
+<!--                <span style="width:80px">${b.label}</span>-->
+<!--                <div class="rating-bar-track"><div class="rating-bar-fill" style="width:${b.val/5*100}%"></div></div>-->
+<!--                <span style="font-size:12px;font-weight:700;color:#f59e0b">${b.val}</span>-->
+<!--            </div>`).join('');-->
+
+<!--        // Reviews list-->
+<!--        const reviews = d.reviews || [];-->
+<!--        document.getElementById('reviewsList').innerHTML = reviews.length ? reviews.map(rv => `-->
+<!--            <div class="review-card">-->
+<!--                <div class="rc-head">-->
+<!--                    <span class="rc-stars">${'⭐'.repeat(Math.round(rv.overall))}</span>-->
+<!--                    <span>${rv.timestamp}</span>-->
+<!--                </div>-->
+<!--                <div style="font-size:11px;color:var(&#45;&#45;sub)">-->
+<!--                    🧹 Cleanliness: ${rv.cleanliness} &nbsp;|&nbsp; 🚌 Driver: ${rv.driver} &nbsp;|&nbsp; ⏱️ Punctuality: ${rv.punctuality}-->
+<!--                </div>-->
+<!--                ${rv.comment ? `<div class="rc-comment">"${rv.comment}"</div>` : ''}-->
+<!--            </div>`).join('') : '<div style="font-size:12px;color:var(&#45;&#45;dim);padding:8px">No reviews yet. Be the first!</div>';-->
+<!--    } catch(e) {-->
+<!--        alert('Could not load ratings. Make sure the backend is running.');-->
+<!--    }-->
+<!--}-->
+
+<!--async function submitRating() {-->
+<!--    const busNum = document.getElementById('ratingBusNum').value.trim();-->
+<!--    const comment = document.getElementById('ratingComment').value.trim();-->
+<!--    const msg = document.getElementById('ratingMsg');-->
+
+<!--    if (!busNum) { alert('Please enter a bus number first'); return; }-->
+<!--    if (!ratingState.cleanliness || !ratingState.driver || !ratingState.punctuality) {-->
+<!--        msg.innerHTML = '<span style="color:#ef4444">⚠️ Please rate all 3 categories</span>'; return;-->
+<!--    }-->
+
+<!--    try {-->
+<!--        msg.innerHTML = '<span style="color:var(&#45;&#45;dim)">Submitting...</span>';-->
+<!--        const r = await fetch(`${API}/ratings/${busNum}`, {-->
+<!--            method: 'POST',-->
+<!--            headers: { 'Content-Type': 'application/json' },-->
+<!--            body: JSON.stringify({-->
+<!--                cleanliness: ratingState.cleanliness,-->
+<!--                driver: ratingState.driver,-->
+<!--                punctuality: ratingState.punctuality,-->
+<!--                comment-->
+<!--            })-->
+<!--        });-->
+<!--        if (r.ok) {-->
+<!--            msg.innerHTML = '<span style="color:#22c55e">✅ Rating submitted!</span>';-->
+<!--            // Reset stars-->
+<!--            ['cleanliness','driver','punctuality'].forEach(c => setStar(c, 0));-->
+<!--            ratingState.cleanliness = ratingState.driver = ratingState.punctuality = 0;-->
+<!--            document.getElementById('ratingComment').value = '';-->
+<!--            setTimeout(() => { loadBusRatings(); loadTopBuses(); }, 800);-->
+<!--        }-->
+<!--    } catch(e) {-->
+<!--        msg.innerHTML = '<span style="color:#ef4444">❌ Error submitting rating</span>';-->
+<!--    }-->
+<!--}-->
+
+// ===== TICKET SERVICE =====
+
+// Simple QR code renderer (matrix-based, no library needed)
+function drawQR(canvas, text) {
+    // Use a basic visual QR placeholder - encode text as a simple pattern
+    const ctx = canvas.getContext('2d');
+    const size = 140;
+    canvas.width = size; canvas.height = size;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000000';
+    // Draw finder patterns (corners)
+    function drawFinder(x, y) {
+        ctx.fillRect(x, y, 21, 21);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x+3, y+3, 15, 15);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(x+6, y+6, 9, 9);
+    }
+    drawFinder(7, 7); drawFinder(size-28, 7); drawFinder(7, size-28);
+    // Encode text as pseudo-random data modules
+    ctx.fillStyle = '#000000';
+    const hash = text.split('').reduce((a, c) => ((a << 5) - a) + c.charCodeAt(0) | 0, 0);
+    for (let row = 0; row < 25; row++) {
+        for (let col = 0; col < 25; col++) {
+            const bit = (hash ^ (row * 31 + col * 17) ^ (row << col)) & 1;
+            if (bit) {
+                const px = 7 + col * 5, py = 7 + row * 5;
+                // skip finder pattern areas
+                if ((px < 30 && py < 30) || (px > size-35 && py < 30) || (px < 30 && py > size-35)) continue;
+                ctx.fillRect(px, py, 4, 4);
+            }
+        }
+    }
+    // Timing patterns
+    for (let i = 14; i < size-14; i += 10) { ctx.fillRect(i, 33, 4, 4); ctx.fillRect(33, i, 4, 4); }
+}
+
+async function generateTicket() {
+    const fromStop  = document.getElementById('ticketFrom').value.trim();
+    const toStop    = document.getElementById('ticketTo').value.trim();
+    const busNumber = document.getElementById('ticketBus').value.trim();
+    const fare      = parseFloat(document.getElementById('ticketFare').value) || 100;
+    const distKm    = parseFloat(document.getElementById('ticketDist').value) || 20;
+
+    if (!fromStop || !toStop || !busNumber) { alert('Please fill in From, To and Bus Number'); return; }
+
+    try {
+        const r = await fetch(`${API}/ticket/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fromStop, toStop, busNumber, fare, distanceKm: distKm })
+        });
+        const t = await r.json();
+        document.getElementById('ticketEmpty').style.display = 'none';
+        document.getElementById('ticketResult').style.display = 'block';
+
+        document.getElementById('ticketCard').innerHTML = `
+            <div class="ticket-id">${t.ticketId} &nbsp;|&nbsp; ${t.passengerType}</div>
+            <div class="ticket-route">🚌 Bus ${t.busNumber}</div>
+            <div style="font-size:13px;opacity:.9;margin-top:4px">📍 ${t.fromStop} → ${t.toStop}</div>
+            <div class="ticket-row">
+                <div>
+                    <div style="font-size:10px;opacity:.7">FARE</div>
+                    <div style="font-size:20px;font-weight:700">Rs. ${t.fare.toFixed(2)}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;opacity:.7">DISTANCE</div>
+                    <div style="font-size:16px;font-weight:700">${t.distanceKm} km</div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:10px;opacity:.7">STATUS</div>
+                    <div style="font-size:13px;font-weight:700;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:20px">${t.status}</div>
+                </div>
+            </div>
+            <div class="ticket-meta">
+                Issued: ${t.issueTime} &nbsp;|&nbsp; Valid until: ${t.validUntil}
+            </div>`;
+
+        // Draw QR code
+        drawQR(document.getElementById('qrCanvas'), t.qrData);
+
+    } catch(e) {
+        alert('Could not generate ticket. Make sure the backend is running.');
+    }
+}
+
+function printTicket() {
+    const card = document.getElementById('ticketCard').outerHTML;
+    const qr = document.getElementById('qrCanvas').toDataURL();
+    const w = window.open('', '_blank');
+    w.document.write(`<html><body style="font-family:sans-serif;padding:20px">${card}<br><img src="${qr}" style="width:140px"><br><p style="font-size:11px;color:#64748b">SLBUS Smart Ticket System</p></body></html>`);
+    w.print(); w.close();
+}
+
+// Auto-load top buses when Rating tab is opened
+document.querySelectorAll('.tabs>.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        if (tab.textContent.includes('Rating')) loadTopBuses();
+    });
+});
 
 </script>
 </body>
