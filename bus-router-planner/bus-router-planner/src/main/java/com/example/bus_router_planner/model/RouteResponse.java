@@ -20,6 +20,10 @@ public class RouteResponse {
     private int seatsAvailable;
     private String crowdMessage;
 
+
+    private long executionTime;
+    private int nodesVisited;
+
     // Add getters/setters for all three
     public RouteResponse() {}
 
@@ -145,5 +149,20 @@ public class RouteResponse {
         this.crowdMessage = crowdMessage;
     }
 
+    public void setExecutionTime(long executionTime) {
+        this.executionTime = executionTime;
+    }
 
+    public void setNodesVisited(int nodesVisited) {
+        this.nodesVisited = nodesVisited;
+    }
+
+
+    public long getExecutionTime() {
+        return executionTime;
+    }
+
+    public int getNodesVisited() {
+        return nodesVisited;
+    }
 }

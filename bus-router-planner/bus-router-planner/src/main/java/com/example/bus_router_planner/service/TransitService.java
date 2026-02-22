@@ -297,6 +297,10 @@ public class TransitService {
         option.setCrowdLevel(crowd);
         option.setAvailableSeats(seats);
 
+
+        option.setExecutionTime(route.getExecutionTime());
+        option.setNodesVisited(route.getNodesVisited());
+
         return option;
     }
 

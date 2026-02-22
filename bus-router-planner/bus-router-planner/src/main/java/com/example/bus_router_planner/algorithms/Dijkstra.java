@@ -20,7 +20,8 @@ public class Dijkstra {
             Graph graph,
             BusStop source,
             String mode,
-            boolean emergencyOnly
+            boolean emergencyOnly,
+            int[] nodesVisited
     ) {
 
         Map<BusStop, Integer> dist = new HashMap<>();
@@ -50,6 +51,8 @@ public class Dijkstra {
         while (!pq.isEmpty()) {
 
             Node node = pq.poll();
+            nodesVisited[0]++;  // count visited nodes
+
             BusStop current = node.stop;
 
             if (node.distance > dist.get(current)) continue;
@@ -87,19 +90,33 @@ public class Dijkstra {
             boolean emergencyOnly
     ) {
 
-        Result result = findPath(graph, source, mode, emergencyOnly);
+        long startTime = System.currentTimeMillis();
+        int[] nodesVisited = new int[]{0};
 
+        Result result = findPath(graph, source, mode, emergencyOnly, nodesVisited);
+
+        long endTime = System.currentTimeMillis();
+        long executionTime = endTime - startTime;
+
+        // If no path found
         if (result.distance.get(destination) == Integer.MAX_VALUE) {
-            return new RouteResponse(
+
+            RouteResponse response = new RouteResponse(
                     false,
                     new ArrayList<>(),
-                    null,              // polylines handled later
+                    null,
                     0,
                     "Dijkstra",
                     mode
             );
+
+            response.setExecutionTime(executionTime);
+            response.setNodesVisited(nodesVisited[0]);
+
+            return response;
         }
 
+        // Build path
         List<BusStop> path = new ArrayList<>();
         BusStop current = destination;
 
@@ -110,13 +127,18 @@ public class Dijkstra {
 
         int totalCost = result.distance.get(destination);
 
-        return new RouteResponse(
+        RouteResponse response = new RouteResponse(
                 true,
                 path,
-                null,              // polylines handled in RouteService
+                null,
                 totalCost,
                 "Dijkstra",
                 mode
         );
+
+        response.setExecutionTime(executionTime);
+        response.setNodesVisited(nodesVisited[0]);
+
+        return response;
     }
 }

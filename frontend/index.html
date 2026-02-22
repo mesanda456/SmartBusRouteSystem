@@ -620,32 +620,115 @@ async function findTransit(){
             `${API}/transit?source=${selSrc.id}&destination=${selDst.id}&mode=${mode}`
         );
 
-        const opts = await r.json();
-
-        if(opts.length > 0){
-            renderOptions(opts);
-            renderChart(opts);
-        }else{
-            document.getElementById('results').innerHTML =
-                '<div class="empty"><div class="eicon">❌</div><h3>No routes found</h3></div>';
+        // ✅ ADD THIS CHECK
+        if(!r.ok){
+            throw new Error("Server error: " + r.status);
         }
 
+        const opts = await r.json();
+
+        // ✅ EXTRA SAFETY
+        if(!opts || opts.length === 0){
+            document.getElementById('results').innerHTML =
+                '<div class="empty"><div class="eicon">❌</div><h3>No routes found</h3></div>';
+            return;
+        }
+
+        renderOptions(opts);
+        renderChart(opts);
+
     }catch(e){
+        console.error("Transit error:", e);
+
         document.getElementById('results').innerHTML =
-            '<div class="empty"><div class="eicon">⚠️</div><h3>API Error</h3></div>';
+            '<div class="empty"><div class="eicon">⚠️</div><h3>API Error</h3><p>Check backend server</p></div>';
     }
 }
-function renderOptions(opts){document.getElementById('results').innerHTML=opts.map((o,i)=>{
-const strip=o.segments.map((s,si)=>s.type==='walk'?`<span class="seg-walk">🚶${s.durationMinutes}m</span><span class="seg-arrow">›</span>`:
-`<span>🚌<span class="bus-badge c${si%6}">${s.busNumber}</span></span>${si<o.segments.length-1?'<span class="seg-arrow">›</span>':''}`).join('');
-const det=o.segments.map((s,si)=>s.type==='walk'?`<div class="dseg"><div class="dline walk"></div><div class="dcont"><div class="dtype walk">🚶 Walk ${s.durationMinutes} min</div><div class="dtxt">${s.fromStop} → ${s.toStop}</div></div></div>`:
-`<div class="dseg"><div class="dline bus" style="background:${COLORS[si%6]}"></div><div class="dcont"><div class="dtype bus">🚌 Bus ${s.busNumber} · ${s.stopCount} stops · ${s.durationMinutes} min</div><div class="dtxt">${s.fromStop} → ${s.toStop}</div><div class="dsub">${s.distanceKm}km · Rs.${s.costRs}</div></div></div>`).join('');
-return`<div class="tcard${i===0?' active':''}" onclick="pickOpt(${i})">${i===0?`<div class="tcard-label">${o.label}</div>`:''}
-<div class="tcard-top"><span class="tcard-time">${o.departureTime} — ${o.arrivalTime}</span><span class="tcard-dur">${fmtD(o.totalDurationMinutes)}</span></div>
-<div class="seg-strip">${strip}</div><div class="tcard-info"><span>💰Rs.${o.totalCostRs}</span><span>📍${o.totalStops} stops</span><span>🔄${o.transfers}</span></div>
-<div class="tcard-detail">${det}</div></div>`}).join('');window._opts=opts;drawOnMap(opts[0])}
-function pickOpt(i){document.querySelectorAll('.tcard').forEach((c,j)=>c.classList.toggle('active',j===i));drawOnMap(window._opts[i])}
-function fmtD(m){return m<60?m+'m':Math.floor(m/60)+'h'+m%60+'m'}
+
+function fmtD(minutes){
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+
+    if(h > 0){
+        return `${h}h ${m}m`;
+    }
+    return `${m}m`;
+}
+
+function renderOptions(opts){
+
+    const resultsDiv = document.getElementById('results');
+
+    resultsDiv.innerHTML = opts.map((o,i)=>{
+
+        const strip=o.segments.map((s,si)=>
+            s.type==='walk'
+            ? `<span class="seg-walk">🚶${s.durationMinutes}m</span><span class="seg-arrow">›</span>`
+            : `<span>🚌<span class="bus-badge c${si%6}">${s.busNumber}</span></span>${
+                si<o.segments.length-1?'<span class="seg-arrow">›</span>':''
+              }`
+        ).join('');
+
+        const det=o.segments.map((s,si)=>
+            s.type==='walk'
+            ? `<div class="dseg"><div class="dline walk"></div>
+               <div class="dcont">
+                   <div class="dtype walk">🚶 Walk ${s.durationMinutes} min</div>
+                   <div class="dtxt">${s.fromStop} → ${s.toStop}</div>
+               </div></div>`
+            : `<div class="dseg">
+                   <div class="dline bus" style="background:${COLORS[si%6]}"></div>
+                   <div class="dcont">
+                       <div class="dtype bus">🚌 Bus ${s.busNumber}</div>
+                       <div class="dtxt">${s.fromStop} → ${s.toStop}</div>
+                   </div>
+               </div>`
+        ).join('');
+
+        return `
+        <div class="tcard${i===0?' active':''}" onclick="pickOpt(${i})">
+            <div class="tcard-top">
+                <span class="tcard-time">${o.departureTime} — ${o.arrivalTime}</span>
+                <span class="tcard-dur">${fmtD(o.totalDurationMinutes)}</span>
+            </div>
+            <div class="seg-strip">${strip}</div>
+            <div class="tcard-info">
+                <span>💰Rs.${o.totalCostRs}</span>
+                <span>📍${o.totalStops} stops</span>
+                <span>🔄${o.transfers}</span>
+            </div>
+            <div class="tcard-detail">${det}</div>
+        </div>`;
+    }).join('');
+
+    window._opts = opts;
+    drawOnMap(opts[0]);
+
+    // 🔥 PERFORMANCE PANEL
+    if (opts.length > 0 && opts[0].executionTime !== undefined) {
+
+        const execTime = opts[0].executionTime;
+        const visited = opts[0].nodesVisited;
+
+        resultsDiv.innerHTML += `
+            <div style="
+                background:var(--bg);
+                border:1px solid var(--border);
+                border-radius:8px;
+                padding:12px;
+                margin:12px 16px;
+                font-size:12px;
+            ">
+                <div style="font-weight:700;color:var(--accent);margin-bottom:6px">
+                    ⚡ Algorithm Performance
+                </div>
+                ⏱ Execution Time: <b>${execTime} ms</b><br>
+                🔎 Nodes Visited: <b>${visited}</b>
+            </div>
+        `;
+    }
+}
+
 
 // ===== ROUTE COMPARISON CHART =====
 function renderChart(opts){if(opts.length<2){document.getElementById('chartArea').style.display='none';return}

@@ -3,25 +3,27 @@ package com.example.bus_router_planner.model;
 import java.util.List;
 
 /**
- * Represents one complete transit route option (like one card in Google Maps).
- * Contains: departure time, arrival time, total duration, segments (walk+bus+walk),
- * bus numbers used, total cost, etc.
+ * Represents one complete transit route option.
  */
 public class TransitOption {
 
-    private String departureTime;        // e.g. "11:04 PM"
-    private String arrivalTime;          // e.g. "2:10 AM"
-    private int totalDurationMinutes;    // total trip time
+    private String departureTime;
+    private String arrivalTime;
+    private int totalDurationMinutes;
     private int totalDistanceKm;
     private int totalCostRs;
     private int totalStops;
-    private int transfers;               // number of bus changes
-    private List<String> busNumbers;     // all bus numbers used ["138","224"]
-    private List<TransitSegment> segments; // ordered segments: walk→bus→walk→bus→walk
-    private String label;                // "Fastest", "Cheapest", "Fewest Transfers"
+    private int transfers;
+    private List<String> busNumbers;
+    private List<TransitSegment> segments;
+    private String label;
     private String algorithm;
     private String crowdLevel;
     private int availableSeats;
+
+    // ✅ NEW FIELDS (FOR PDSA PERFORMANCE)
+    private long executionTime;
+    private int nodesVisited;
 
     public TransitOption() {}
 
@@ -65,4 +67,22 @@ public class TransitOption {
 
     public int getAvailableSeats() { return availableSeats; }
     public void setAvailableSeats(int availableSeats) { this.availableSeats = availableSeats; }
+
+    // ✅ NEW GETTERS & SETTERS
+
+    public long getExecutionTime() {
+        return executionTime;
+    }
+
+    public void setExecutionTime(long executionTime) {
+        this.executionTime = executionTime;
+    }
+
+    public int getNodesVisited() {
+        return nodesVisited;
+    }
+
+    public void setNodesVisited(int nodesVisited) {
+        this.nodesVisited = nodesVisited;
+    }
 }
