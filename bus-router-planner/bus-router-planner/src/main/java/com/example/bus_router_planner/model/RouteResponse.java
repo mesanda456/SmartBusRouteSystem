@@ -34,6 +34,13 @@ public class RouteResponse {
         this.message = found ? "Route found successfully" : "No route available";
     }
 
+    public static RouteResponse error(String message) {
+        RouteResponse r = new RouteResponse();
+        r.setFound(false);
+        r.setMessage(message);
+        return r;
+    }
+
     // ---------- getters & setters ----------
 
     public boolean isFound() {

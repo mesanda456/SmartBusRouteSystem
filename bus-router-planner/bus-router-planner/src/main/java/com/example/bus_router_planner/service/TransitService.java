@@ -23,6 +23,9 @@ public class TransitService {
     @Autowired
     private RoadSegmentService roadSegmentService;
 
+    @Autowired
+    private CrowdPredictionService crowdPredictionService;
+
     // ==================== BUS ROUTE MAPPING ====================
     // Maps corridor segments to real Sri Lankan bus numbers
     private static final Map<String, List<String>> BUS_NUMBERS = new HashMap<>();
@@ -115,30 +118,47 @@ public class TransitService {
      * Find all transit options (like Google Maps transit tab).
      * Returns multiple route options with different strategies.
      */
-    public List<TransitOption> findTransitOptions(String sourceId, String destId) {
+    public List<TransitOption> findTransitOptions(String sourceId,
+                                                  String destId,
+                                                  String mode) {
+
         List<TransitOption> options = new ArrayList<>();
+        List<RouteResponse> routes = new ArrayList<>();
 
-        // Get alternative routes from existing service
-        List<RouteResponse> routes = routeService.getAlternativeRoutes(sourceId, destId);
+        // Dijkstra route
+        RouteRequest mainRequest =
+                new RouteRequest(sourceId, destId, "dijkstra", "distance", false);
+        RouteResponse mainRoute = routeService.findRoute(mainRequest);
 
-        if (routes.isEmpty()) {
-            // Try single dijkstra
-            RouteRequest req = new RouteRequest(sourceId, destId, "dijkstra", "time", false);
-            RouteResponse single = routeService.findRoute(req);
-            if (single.isFound()) routes.add(single);
+        if (mainRoute.isFound()) {
+            routes.add(mainRoute);
         }
 
-        // Convert each route to a TransitOption
-        String[] labels = {"Fastest Route", "Cheapest Route", "Fewest Transfers", "Shortest Distance"};
+        // A* route
+        RouteRequest aStarRequest =
+                new RouteRequest(sourceId, destId, "astar", mode, false);
+
+        RouteResponse aStarRoute = routeService.findRoute(aStarRequest);
+
+        if (aStarRoute.isFound()) {
+            routes.add(aStarRoute);
+        }
+
+        String[] labels = {"Primary Route", "Alternative Route"};
         LocalTime now = LocalTime.now();
 
         for (int i = 0; i < routes.size(); i++) {
             RouteResponse route = routes.get(i);
             if (!route.isFound() || route.getPath() == null) continue;
 
-            // Stagger departure times (simulate schedules)
-            LocalTime departure = now.plusMinutes(5 + (i * 13));
-            TransitOption option = buildTransitOption(route, departure, i < labels.length ? labels[i] : "Alternative " + (i + 1));
+            LocalTime departure = now.plusMinutes(5 + (i * 10));
+
+            TransitOption option = buildTransitOption(
+                    route,
+                    departure,
+                    i < labels.length ? labels[i] : "Alternative " + (i + 1)
+            );
+
             options.add(option);
         }
 
@@ -270,6 +290,12 @@ public class TransitService {
         option.setSegments(segments);
         option.setLabel(label);
         option.setAlgorithm(route.getAlgorithm());
+        // Crowd prediction
+        String crowd = crowdPredictionService.predictCrowd(departure);
+        int seats = crowdPredictionService.estimateSeatAvailability(crowd);
+
+        option.setCrowdLevel(crowd);
+        option.setAvailableSeats(seats);
 
         return option;
     }

@@ -26,8 +26,18 @@ public class Dijkstra {
         Map<BusStop, Integer> dist = new HashMap<>();
         Map<BusStop, BusStop> prev = new HashMap<>();
 
-        PriorityQueue<BusStop> pq =
-                new PriorityQueue<>(Comparator.comparingInt(dist::get));
+        class Node {
+            BusStop stop;
+            int distance;
+
+            Node(BusStop s, int d) {
+                stop = s;
+                distance = d;
+            }
+        }
+
+        PriorityQueue<Node> pq =
+                new PriorityQueue<>(Comparator.comparingInt(n -> n.distance));
 
         for (BusStop stop : graph.adjList.keySet()) {
             dist.put(stop, Integer.MAX_VALUE);
@@ -35,16 +45,20 @@ public class Dijkstra {
         }
 
         dist.put(source, 0);
-        pq.add(source);
+        pq.add(new Node(source, 0));
 
         while (!pq.isEmpty()) {
-            BusStop current = pq.poll();
+
+            Node node = pq.poll();
+            BusStop current = node.stop;
+
+            if (node.distance > dist.get(current)) continue;
 
             for (Edge edge : graph.adjList.get(current)) {
 
                 if (emergencyOnly && !edge.isSafe()) continue;
 
-                int weight = switch (mode) {
+                int weight = switch (mode != null ? mode : "distance") {
                     case "time" -> edge.getTime();
                     case "cost" -> edge.getCost();
                     default -> edge.getDistance();
@@ -53,10 +67,11 @@ public class Dijkstra {
                 int newDist = dist.get(current) + weight;
 
                 if (newDist < dist.get(edge.getDestination())) {
+
                     dist.put(edge.getDestination(), newDist);
                     prev.put(edge.getDestination(), current);
-                    pq.remove(edge.getDestination());
-                    pq.add(edge.getDestination());
+
+                    pq.add(new Node(edge.getDestination(), newDist));
                 }
             }
         }

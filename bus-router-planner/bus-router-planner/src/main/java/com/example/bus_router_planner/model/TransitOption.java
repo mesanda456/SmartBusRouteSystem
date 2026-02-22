@@ -20,6 +20,8 @@ public class TransitOption {
     private List<TransitSegment> segments; // ordered segments: walk→bus→walk→bus→walk
     private String label;                // "Fastest", "Cheapest", "Fewest Transfers"
     private String algorithm;
+    private String crowdLevel;
+    private int availableSeats;
 
     public TransitOption() {}
 
@@ -57,4 +59,10 @@ public class TransitOption {
 
     public String getAlgorithm() { return algorithm; }
     public void setAlgorithm(String algorithm) { this.algorithm = algorithm; }
+
+    public String getCrowdLevel() { return crowdLevel; }
+    public void setCrowdLevel(String crowdLevel) { this.crowdLevel = crowdLevel; }
+
+    public int getAvailableSeats() { return availableSeats; }
+    public void setAvailableSeats(int availableSeats) { this.availableSeats = availableSeats; }
 }

@@ -53,8 +53,12 @@ public class RouteController {
     }
 
     @GetMapping("/transit")
-    public List<TransitOption> getTransitOptions(@RequestParam String source, @RequestParam String destination) {
-        return transitService.findTransitOptions(source, destination);
+    public List<TransitOption> getTransitOptions(
+            @RequestParam String source,
+            @RequestParam String destination,
+            @RequestParam(defaultValue = "distance") String mode) {
+
+        return transitService.findTransitOptions(source, destination, mode);
     }
 
     @GetMapping("/schedule")

@@ -200,6 +200,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);height:100vh;overflow
                 <input class="sinput" id="dstIn" placeholder="Where to?" autocomplete="off">
                 <div class="aclist" id="dstAC"></div>
             </div>
+            <select class="sinput" id="routeMode" style="padding-left:10px;margin-top:8px">
+                <option value="distance">🔵 Shortest Distance</option>
+                <option value="time">🟢 Fastest Time</option>
+                <option value="cost">🟣 Cheapest Cost</option>
+            </select>
             <button class="go-btn" onclick="findTransit()" data-i18n="search">🔎 Search Bus Routes</button>
         </div>
         <div id="results"><div class="empty"><div class="eicon">🗺️</div><h3 data-i18n="searchHint">Search for a bus route</h3><p>Nugegoda → Fort Railway Station</p></div></div>
@@ -388,12 +393,46 @@ async function getFullRoad(seg){if(seg.polyline&&seg.polyline.length>1){const a=
 const pts=await getRoad(p1[0],p1[1],p2[0],p2[1]);if(!a.length)a.push(...pts);else a.push(...pts.slice(1))}return a}return await getRoad(seg.fromLat,seg.fromLng,seg.toLat,seg.toLng)}
 
 // ===== TRANSIT SEARCH =====
-async function findTransit(){if(!selSrc||!selDst){alert('Select both locations');return}if(selSrc.id===selDst.id){alert('Same location');return}
-addHistory(selSrc,selDst);document.getElementById('results').innerHTML='<div class="loading"><div class="spinner"></div><p>Finding routes...</p></div>';
-try{const r=await fetch(`${API}/transit?source=${selSrc.id}&destination=${selDst.id}`);const opts=await r.json();
-if(opts.length>0){renderOptions(opts);renderChart(opts)}else document.getElementById('results').innerHTML='<div class="empty"><div class="eicon">❌</div><h3>No routes found</h3></div>'}
-catch(e){document.getElementById('results').innerHTML='<div class="empty"><div class="eicon">⚠️</div><h3>API Error</h3></div>'}}
+async function findTransit(){
 
+    if(!selSrc || !selDst){
+        alert('Select both locations');
+        return;
+    }
+
+    if(selSrc.id === selDst.id){
+        alert('Same location');
+        return;
+    }
+
+    addHistory(selSrc, selDst);
+
+    document.getElementById('results').innerHTML =
+        '<div class="loading"><div class="spinner"></div><p>Finding routes...</p></div>';
+
+    try{
+
+        const mode = document.getElementById("routeMode").value;
+
+        const r = await fetch(
+            `${API}/transit?source=${selSrc.id}&destination=${selDst.id}&mode=${mode}`
+        );
+
+        const opts = await r.json();
+
+        if(opts.length > 0){
+            renderOptions(opts);
+            renderChart(opts);
+        }else{
+            document.getElementById('results').innerHTML =
+                '<div class="empty"><div class="eicon">❌</div><h3>No routes found</h3></div>';
+        }
+
+    }catch(e){
+        document.getElementById('results').innerHTML =
+            '<div class="empty"><div class="eicon">⚠️</div><h3>API Error</h3></div>';
+    }
+}
 function renderOptions(opts){document.getElementById('results').innerHTML=opts.map((o,i)=>{
 const strip=o.segments.map((s,si)=>s.type==='walk'?`<span class="seg-walk">🚶${s.durationMinutes}m</span><span class="seg-arrow">›</span>`:
 `<span>🚌<span class="bus-badge c${si%6}">${s.busNumber}</span></span>${si<o.segments.length-1?'<span class="seg-arrow">›</span>':''}`).join('');
