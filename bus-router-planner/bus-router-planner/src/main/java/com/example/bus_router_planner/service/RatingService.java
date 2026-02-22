@@ -80,4 +80,18 @@ public class RatingService {
 
         return result;
     }
+
+    /**
+     * Get top-rated buses
+     */
+    public List<Map<String, Object>> getTopBuses() {
+        List<Map<String, Object>> top = new ArrayList<>();
+        for (var entry : ratings.entrySet()) {
+            Map<String, Object> bus = getRatings(entry.getKey());
+            top.add(bus);
+        }
+        top.sort((a, b) -> Double.compare((double) b.get("avgOverall"), (double) a.get("avgOverall")));
+        return top;
+    }
 }
+
