@@ -380,9 +380,5 @@ public class RouteService {
 //        this.crowdPredictionService = crowdPredictionService;
 //    }
 
-//    private final CrowdPredictionService crowdPredictionService;
-//
-//    public RouteService(final CrowdPredictionService crowdPredictionService) {
-//        this.crowdPredictionService = crowdPredictionService;
-//    }
+
 }
