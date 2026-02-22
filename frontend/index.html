@@ -29,7 +29,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);height:100vh;overflow
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* Tabs */
-.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg)}
+.tabs{
+    display:flex;
+    overflow-x:auto;      /* enable horizontal scroll */
+    overflow-y:hidden;
+    white-space:nowrap;   /* keep tabs in one line */
+    scrollbar-width:none; /* Firefox */
+}
+
+.tabs::-webkit-scrollbar{
+    display:none;         /* Chrome/Safari hide scrollbar */
+}
+
+.tab{
+    flex:0 0 auto;        /* DO NOT stretch equally */
+    min-width:90px;       /* give fixed width */
+    padding:10px 12px;
+}
+
+.tabs{
+    -webkit-overflow-scrolling: touch;
+}
 .tab{flex:1;padding:8px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--dim);transition:all .15s}
 .tab:hover{color:var(--txt)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
