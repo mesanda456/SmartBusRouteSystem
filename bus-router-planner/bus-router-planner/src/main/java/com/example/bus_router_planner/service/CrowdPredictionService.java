@@ -35,7 +35,7 @@ public class CrowdPredictionService {
             case "HIGH":
                 return 5;   // Almost full
             case "MEDIUM":
-                return 20;  // Half full
+                return 20;  // Half_full
             default:
                 return 40;  // Plenty seats
         }
