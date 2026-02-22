@@ -6,6 +6,7 @@ public class RouteRequest {
     private String algorithm;
     private String mode;
     private boolean emergencyOnly;
+    private String departureTime; // e.g. "08:30"
 
     public RouteRequest() {}
 
@@ -16,6 +17,7 @@ public class RouteRequest {
         this.algorithm = algorithm;
         this.mode = mode;
         this.emergencyOnly = emergencyOnly;
+
     }
 
     public String getSource() {
@@ -56,5 +58,13 @@ public class RouteRequest {
 
     public void setEmergencyOnly(boolean emergencyOnly) {
         this.emergencyOnly = emergencyOnly;
+    }
+
+    public String getDepartureTime() {
+        return departureTime;
+    }
+
+    public void setDepartureTime(String departureTime) {
+        this.departureTime = departureTime;
     }
 }
