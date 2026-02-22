@@ -71,11 +71,13 @@ public class BFS {
                 return result;
             }
 
-            for (Edge edge : graph.adjList.get(current)) {
-                if (!stops.containsKey(edge.getDestination())) {
-                    stops.put(edge.getDestination(), stops.get(current) + 1);
-                    previous.put(edge.getDestination(), current);
-                    queue.add(edge.getDestination());
+            for (Edge edge : graph.adjList.getOrDefault(current, Collections.emptyList())) {
+                BusStop neighbor = edge.getDestination();
+
+                if (!stops.containsKey(neighbor)) {
+                    stops.put(neighbor, stops.get(current) + 1);
+                    previous.put(neighbor, current);
+                    queue.add(neighbor);
                 }
             }
         }
