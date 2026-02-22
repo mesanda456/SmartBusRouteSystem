@@ -65,6 +65,15 @@ public class RouteController {
         return transitService.findTransitOptions(source, destination, mode);
     }
 
+    @GetMapping("/transit/compare")
+    public List<TransitOption> compareTransit(
+            @RequestParam String source,
+            @RequestParam String destination,
+            @RequestParam String mode) {
+
+        return transitService.compareTransit(source, destination, mode);
+    }
+
     @GetMapping("/schedule")
     public Map<String, Object> getSchedule(@RequestParam String stopId) { return scheduleService.getSchedule(stopId); }
 

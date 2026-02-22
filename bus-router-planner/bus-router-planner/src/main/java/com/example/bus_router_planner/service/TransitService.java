@@ -304,6 +304,37 @@ public class TransitService {
         return option;
     }
 
+    public List<TransitOption> compareTransit(String sourceId,
+                                              String destId,
+                                              String mode) {
+
+        List<TransitOption> options = new ArrayList<>();
+
+        String[] algorithms = {"dijkstra", "bfs", "astar"};
+        LocalTime now = LocalTime.now();
+
+        for (int i = 0; i < algorithms.length; i++) {
+
+            RouteRequest request =
+                    new RouteRequest(sourceId, destId, algorithms[i], mode, false);
+
+            RouteResponse route = routeService.findRoute(request);
+
+            if (route.isFound()) {
+
+                TransitOption option = buildTransitOption(
+                        route,
+                        now.plusMinutes(5 + (i * 5)),
+                        algorithms[i].toUpperCase()
+                );
+
+                options.add(option);
+            }
+        }
+
+        return options;
+    }
+
     // ---- Estimate helpers (fallback values based on coordinate distance) ----
 
     private int estimateTime(BusStop a, BusStop b) {
