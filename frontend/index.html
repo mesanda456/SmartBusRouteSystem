@@ -733,6 +733,10 @@ function setDayType(type){
     selectedDayType = type;
     document.getElementById('btnWeekday').style.background = type === 'WEEKDAY' ? '#3b82f6' : '#334155';
     document.getElementById('btnWeekend').style.background = type === 'WEEKEND' ? '#7c3aed' : '#334155';
+    // Auto re-check if a result is already showing
+    if(document.getElementById('crowdResult').innerHTML !== ''){
+        checkCrowd();
+    }
 }
 
 async function checkCrowd(){
