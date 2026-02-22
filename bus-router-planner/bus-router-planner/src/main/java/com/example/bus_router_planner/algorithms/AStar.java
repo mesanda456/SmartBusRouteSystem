@@ -51,7 +51,12 @@ public class AStar {
                     gScore.put(neighbor, tentativeG);
                     fScore.put(neighbor, tentativeG + heuristic(neighbor, destination));
 
-                    if (!openSet.contains(neighbor)) {
+                    if (tentativeG < gScore.get(neighbor)) {
+                        prev.put(neighbor, current);
+                        gScore.put(neighbor, tentativeG);
+                        fScore.put(neighbor, tentativeG + heuristic(neighbor, destination));
+
+                        openSet.remove(neighbor);  // IMPORTANT FIX
                         openSet.add(neighbor);
                     }
                 }
